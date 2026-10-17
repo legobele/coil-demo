@@ -16,6 +16,52 @@ screen, one hand often holding a phone. Primary actions are 88px+
 tall at the 1080-wide design scale, secondaries 72px+, product cards
 are whole-card tap targets with 26px gaps.
 
+## The 12-inch rule (type floors)
+
+The screen is read by a standing user from about 12 inches (30 cm).
+Functional type never goes below these floors at the 1080 design
+scale (1rem = 20px), no matter the layout:
+
+| Element | Floor |
+|---|---|
+| Product names (cards + detail) | 44px |
+| Prices (cards, detail, always bold) | 44px |
+| Totals (detail total, pay total) | 44px / 60px |
+| Card blurbs + all body copy | 30px |
+| Nutrition values | 34px |
+| Nutrition labels, stock tags, [ SOLD OUT ] | 24px |
+| Pay instructions | 32px |
+| Pay countdown numeral | 48px |
+
+Decorative HUD chrome (corner tags, footer, slot codes in topbars)
+may stay smaller; anything that informs a decision may not. The
+catalog runs 2 columns so the type fits — fewer, bigger cards,
+scrolling is fine. Below 700px wide (the phone demo), the root size
+is held at the design scale so the floors stay absolute: the type
+does NOT shrink, the layout reflows into a single column and the
+screens scroll internally instead.
+
+## Motion
+
+One easing (`cubic-bezier(.22,1,.36,1)`) and three durations for the
+whole product: `--dur-micro` 160ms (presses, hovers), `--dur-screen`
+280ms (screen entrances, card stagger), `--dur-overlay` 240ms (QR
+overlay). Screen changes run through the state machine: the stage
+dips (fade + slight settle, 120ms) while screens swap, and the
+incoming screen rises in. Buttons dip scale/brightness on press;
+quantity ticks and the total pulses on change; the pay countdown
+pulses under 10 seconds; a sold-out card answers a tap with one
+small shake instead of navigating. `prefers-reduced-motion`
+collapses all of it to instant state changes.
+
+The vend sequence is staged on an outlined schematic of the machine
+(slot window + coil shelf, dashed drop shaft, collection tray): the
+purchased item tips off its shelf, falls with gravity easing while
+the camera pans down tracking it, and lands resting fully inside
+the tray outline — that final frame holds ~1.1s before Thank You.
+Cans/bottles tumble 16°, bars 10°, packs 6°. Storyboard keyframes
+live in `samples/vend-story-*.png`.
+
 ## Run it
 
 Open `index.html` in a browser, or serve the folder statically:

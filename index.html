@@ -19,7 +19,11 @@
   --line:rgba(255,255,255,.14); --line-strong:rgba(255,255,255,.28);
   --ink:#fafafa; --muted:#a8a8b0; --dim:#6f6f77;
   --accent:#ffffff;
+  /* motion system: one easing, three durations, used everywhere */
   --ease:cubic-bezier(.22,1,.36,1);
+  --dur-micro:160ms;
+  --dur-screen:280ms;
+  --dur-overlay:240ms;
   --mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
   --disp:'Anybody',Arial,Helvetica,sans-serif;
   --ui:Arial,Helvetica,sans-serif;
@@ -42,7 +46,8 @@ body::before{
     linear-gradient(90deg, rgba(255,255,255,.075) 1px, transparent 1px);
   background-size:2.8rem 2.8rem, 2.8rem 2.8rem, 14rem 14rem, 14rem 14rem;
 }
-.stage{position:relative; z-index:1; height:100dvh; display:flex; flex-direction:column;}
+.stage{position:relative; z-index:1; height:100dvh; display:flex; flex-direction:column; transition:opacity var(--dur-micro) var(--ease), transform var(--dur-micro) var(--ease);}
+.stage.switching{opacity:0; transform:translateY(8px) scale(.998);}
 
 /* ---------- type ---------- */
 .hud{font-family:var(--mono); text-transform:uppercase; letter-spacing:.28em; font-size:.78rem; color:var(--muted);}
@@ -67,9 +72,10 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
   min-height:3.6rem; min-width:3.6rem; padding:0 1.8rem;
   display:inline-flex; align-items:center; justify-content:center; gap:.7rem;
   border-radius:.25rem; font-family:var(--mono); text-transform:uppercase;
-  letter-spacing:.22em; font-size:1rem; transition:transform .18s var(--ease), background .18s var(--ease), color .18s var(--ease);
+  letter-spacing:.22em; font-size:1.2rem; transition:transform var(--dur-micro) var(--ease), background var(--dur-micro) var(--ease), color var(--dur-micro) var(--ease), filter var(--dur-micro) var(--ease);
 }
-.btn:active{transform:scale(.97);}
+.btn:active{transform:scale(.96); filter:brightness(1.25);}
+.btn-primary:active{filter:brightness(.88);}
 .btn-primary{background:var(--accent); color:#050505; font-weight:700;}
 .btn-ghost{box-shadow:inset 0 0 0 1px var(--line-strong); color:var(--ink);}
 .btn-glass{border-radius:2.2rem;}
@@ -77,8 +83,8 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
 
 /* ---------- screens ---------- */
 .screen{position:absolute; inset:0; bottom:2.6rem; display:none; flex-direction:column; padding:2rem 2.2rem 1.6rem;}
-.screen.active{display:flex; animation:screenIn .38s var(--ease);}
-@keyframes screenIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+.screen.active{display:flex; animation:screenIn var(--dur-screen) var(--ease);}
+@keyframes screenIn{from{opacity:0; transform:translateY(14px) scale(.996);} to{opacity:1; transform:none;}}
 .topbar{display:flex; align-items:center; justify-content:space-between; gap:1rem; min-height:3.5rem;}
 .topbar .brand{display:flex; align-items:center; gap:.9rem;}
 .mark{color:var(--ink); display:block;}
@@ -103,40 +109,50 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
 .attract-clock{font-family:var(--mono); font-size:2.6rem; letter-spacing:.12em; margin-top:4.5vh; font-variant-numeric:tabular-nums;}
 .attract-date{margin-top:.5rem;}
 .attract-head{font-size:4.6rem; margin-top:3.5vh; max-width:12ch;}
-.attract-sub{margin-top:1.4rem; max-width:34ch; line-height:1.55; color:var(--muted); font-size:1.05rem;}
+.attract-sub{margin-top:1.4rem; max-width:34ch; line-height:1.5; color:var(--muted); font-size:1.5rem;}
 .start-pill{margin-top:4.5vh; font-size:1.2rem; padding:0 3rem; min-height:4.6rem; animation:pulse 2.6s ease-in-out infinite;}
 @keyframes pulse{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14), 0 0 0 0 rgba(255,255,255,.22);} 50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14), 0 0 0 1.1rem rgba(255,255,255,0);}}
 .browse-panel{
   margin-top:auto; margin-bottom:1.2rem; display:flex; align-items:center; gap:1.4rem;
-  padding:1.1rem 1.4rem; text-align:left; max-width:30rem;
+  padding:1.1rem 1.4rem; text-align:left; max-width:38rem;
 }
-.browse-panel img{width:6.2rem; height:6.2rem; border-radius:.4rem; display:block;}
+.browse-panel img{width:7rem; height:7rem; border-radius:.4rem; display:block;}
 .qr-card{background:#fff; padding:.55rem; border-radius:.5rem; line-height:0;}
 .qr-card img{display:block;}
-.browse-panel .bp-text .hud{color:var(--ink);}
-.browse-panel .bp-text p{color:var(--muted); font-size:.9rem; line-height:1.5; margin-top:.45rem;}
+.browse-panel .bp-text .hud{color:var(--ink); font-size:1.2rem;}
+.browse-panel .bp-text p{color:var(--muted); font-size:1.5rem; line-height:1.45; margin-top:.45rem;}
 
 /* ---------- CATALOG ---------- */
 .catalog-head{display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin:1.2rem 0 1.4rem;}
 .catalog-head .headline{font-size:2.6rem;}
-.browse-chip{display:flex; align-items:center; gap:.9rem; padding:.85rem 1.1rem .85rem .85rem; border-radius:.8rem; text-align:left;}
-.browse-chip img{width:3.8rem; height:3.8rem; border-radius:.3rem;}
-.browse-chip .hud{font-size:.68rem; line-height:1.7;}
-.grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1.3rem; flex:1; min-height:0;}
+.browse-chip{display:flex; align-items:center; gap:1rem; padding:1rem 1.3rem 1rem 1rem; border-radius:.8rem; text-align:left;}
+.browse-chip img{width:5rem; height:5rem; border-radius:.3rem;}
+.browse-chip .hud{font-size:1.5rem; line-height:1.45;}
+.grid{display:grid; grid-template-columns:repeat(2,1fr); gap:1.5rem; flex:1; min-height:0; overflow-y:auto; scrollbar-width:none; align-content:start;}
+.grid::-webkit-scrollbar{display:none;}
 .pcard{
   background:var(--card); border:1px solid var(--line); border-radius:.375rem;
-  display:flex; flex-direction:column; padding:1rem 1rem .9rem; text-align:left;
-  transition:border-color .18s var(--ease), transform .18s var(--ease); position:relative; overflow:hidden;
+  display:flex; flex-direction:column; padding:1.4rem 1.4rem 1.2rem; text-align:left; min-height:27rem;
+  transition:border-color var(--dur-micro) var(--ease), transform var(--dur-micro) var(--ease), filter var(--dur-micro) var(--ease); position:relative; overflow:hidden;
+  animation:cardIn var(--dur-screen) var(--ease) both;
 }
-.pcard:active{transform:scale(.98);}
-.pcard .slot{position:absolute; top:.8rem; left:.9rem; z-index:2;}
-.pcard .stock{position:absolute; top:.8rem; right:.9rem; z-index:2; font-size:.66rem;}
-.pcard .art{flex:1; display:flex; align-items:center; justify-content:center; min-height:0; padding:.6rem 0 .2rem;}
-.pcard .art svg{height:100%; max-height:11rem; width:auto;}
-.pcard .pname{font-family:var(--disp); font-weight:800; font-stretch:130%; text-transform:uppercase; font-size:1.02rem; line-height:1.12; letter-spacing:.02em;}
-.pcard .prow{display:flex; justify-content:space-between; align-items:baseline; margin-top:.45rem;}
-.pcard .pprice{font-size:1.15rem; color:var(--ink);}
-.pcard .punit{font-size:.72rem; color:var(--dim); letter-spacing:.14em;}
+.pcard:active{transform:scale(.975); filter:brightness(1.3);}
+@keyframes cardIn{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:none;}}
+.pcard:nth-child(2){animation-delay:35ms;} .pcard:nth-child(3){animation-delay:70ms;}
+.pcard:nth-child(4){animation-delay:105ms;} .pcard:nth-child(5){animation-delay:140ms;}
+.pcard:nth-child(6){animation-delay:175ms;} .pcard:nth-child(7){animation-delay:210ms;}
+.pcard:nth-child(8){animation-delay:245ms;} .pcard:nth-child(9){animation-delay:280ms;}
+.pcard.shake{animation:shake var(--dur-screen) var(--ease);}
+@keyframes shake{0%,100%{transform:translateX(0);} 25%{transform:translateX(-7px);} 55%{transform:translateX(6px);} 80%{transform:translateX(-3px);}}
+.pcard .slot{position:absolute; top:1.1rem; left:1.2rem; z-index:2; font-size:1.2rem;}
+.pcard .stock{position:absolute; top:1.1rem; right:1.2rem; z-index:2; font-size:1.2rem;}
+.pcard .art{flex:0 1 auto; display:flex; align-items:center; justify-content:center; min-height:9rem; padding:.8rem 0 .4rem;}
+.pcard .art svg{height:11.5rem; width:auto;}
+.pcard .pname{font-family:var(--disp); font-weight:800; font-stretch:130%; text-transform:uppercase; font-size:2.2rem; line-height:1.12; letter-spacing:.02em;}
+.pcard .pblurb{font-size:1.5rem; line-height:1.35; color:var(--muted); margin-top:.6rem;}
+.pcard .prow{display:flex; justify-content:space-between; align-items:baseline; margin-top:.8rem;}
+.pcard .pprice{font-size:2.2rem; font-weight:700; color:var(--ink);}
+.pcard .punit{font-size:1.5rem; color:var(--dim); letter-spacing:.1em;}
 .pcard.soldout{cursor:not-allowed;}
 .pcard.soldout .art svg{filter:grayscale(1); opacity:.38;}
 .pcard.soldout .pname, .pcard.soldout .pprice{color:var(--dim);}
@@ -145,52 +161,64 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
   content:""; position:absolute; left:-12%; right:-12%; top:46%; height:1px;
   background:var(--line-strong); transform:rotate(-7deg);
 }
-.tag{display:inline-block; font-family:var(--mono); font-size:.62rem; letter-spacing:.2em; text-transform:uppercase; color:var(--ink); border:1px solid var(--line-strong); padding:.28rem .5rem; border-radius:.2rem; margin-top:.55rem; align-self:flex-start;}
+.tag{display:inline-block; font-family:var(--mono); font-size:1.2rem; letter-spacing:.16em; text-transform:uppercase; color:var(--ink); border:1px solid var(--line-strong); padding:.45rem .8rem; border-radius:.2rem; margin-top:.7rem; align-self:flex-start;}
 
 /* QR overlay (browse, expanded) */
-.overlay{position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:rgba(3,3,4,.72); padding:2rem;}
-.overlay.open{display:flex;}
-.overlay .panel{padding:2.2rem; text-align:center; max-width:26rem; width:100%;}
+.overlay{position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; background:rgba(3,3,4,.72); padding:2rem; opacity:0; visibility:hidden; pointer-events:none; transition:opacity var(--dur-overlay) var(--ease), visibility 0s linear var(--dur-overlay);}
+.overlay.open{opacity:1; visibility:visible; pointer-events:auto; transition:opacity var(--dur-overlay) var(--ease);}
+.overlay .panel{transform:scale(.93) translateY(12px); transition:transform var(--dur-overlay) var(--ease);}
+.overlay.open .panel{transform:none;}
+.overlay .panel{padding:2.2rem; text-align:center; max-width:36rem; width:100%;}
 .overlay .panel .qr-card{display:inline-block; margin:1.2rem 0;}
 .overlay .panel .qr-card img{width:13rem; height:13rem;}
-.overlay .panel p{color:var(--muted); font-size:.95rem; line-height:1.55;}
+.overlay .panel p{color:var(--muted); font-size:1.5rem; line-height:1.5;}
 
 /* ---------- DETAIL ---------- */
 .detail-wrap{flex:1; display:flex; flex-direction:column; min-height:0; overflow-y:auto; scrollbar-width:none;}
 .detail-wrap::-webkit-scrollbar{display:none;}
 .detail-hero{display:flex; gap:1.6rem; align-items:stretch; margin-top:1rem;}
 .detail-art{
-  flex:0 0 38%; background:var(--surface2); border:1px solid var(--line); border-radius:.375rem;
-  display:flex; align-items:center; justify-content:center; padding:1.2rem; position:relative; min-height:22rem;
+  flex:0 0 44%; background:var(--surface2); border:1px solid var(--line); border-radius:.375rem;
+  display:flex; align-items:center; justify-content:center; padding:1.2rem; position:relative; min-height:26rem;
 }
-.detail-art svg{height:16.5rem; width:auto;}
-.detail-art .slot{position:absolute; top:.9rem; left:1rem;}
+.detail-art svg{height:20rem; width:auto;}
+.detail-art .slot{position:absolute; top:.9rem; left:1rem; font-size:1.2rem;}
 .detail-info{flex:1; display:flex; flex-direction:column;}
 .detail-info .headline{font-size:2.5rem; margin:.5rem 0 .8rem;}
-.detail-info .desc{color:var(--muted); line-height:1.55; font-size:1rem;}
+.detail-info .desc{color:var(--muted); line-height:1.5; font-size:1.5rem;}
 .detail-price-row{display:flex; align-items:baseline; gap:1.1rem; margin-top:auto; padding-top:1rem;}
-.detail-price-row .pprice{font-size:2rem;}
+.detail-price-row .pprice{font-size:2.2rem; font-weight:700;}
+#detail-stock{font-size:1.2rem;}
+#detail-slot{font-size:1.2rem;}
 .spec{margin-top:1.5rem; border:1px solid var(--line); border-radius:.375rem; background:var(--card);}
-.spec-head{display:flex; justify-content:space-between; align-items:center; padding:.85rem 1.1rem; border-bottom:1px solid var(--line);}
+.spec-head{display:flex; justify-content:space-between; align-items:center; padding:1rem 1.4rem; border-bottom:1px solid var(--line);}
+.spec-head .hud{font-size:1.2rem;}
 .spec-grid{display:grid; grid-template-columns:repeat(3,1fr);}
-.spec-cell{padding:.95rem 1.1rem; border-right:1px solid var(--line); border-bottom:1px solid var(--line);}
+.spec-cell{padding:1.3rem 1.4rem; border-right:1px solid var(--line); border-bottom:1px solid var(--line);}
 .spec-cell:nth-child(3n){border-right:none;}
 .spec-cell:nth-last-child(-n+3){border-bottom:none;}
-.spec-cell .v{font-family:var(--mono); font-size:1.5rem; font-variant-numeric:tabular-nums;}
-.spec-cell .v small{font-size:.85rem; color:var(--muted);}
-.spec-cell .k{font-family:var(--mono); font-size:.64rem; letter-spacing:.24em; text-transform:uppercase; color:var(--dim); margin-top:.3rem;}
-.spec-foot{padding:.95rem 1.1rem; border-top:1px solid var(--line);}
-.spec-foot .k{font-family:var(--mono); font-size:.64rem; letter-spacing:.24em; text-transform:uppercase; color:var(--dim);}
-.spec-foot p{color:var(--muted); font-size:.88rem; line-height:1.55; margin-top:.35rem;}
+.spec-cell .v{font-family:var(--mono); font-size:1.7rem; font-variant-numeric:tabular-nums;}
+.spec-cell .v small{font-size:1rem; color:var(--muted);}
+.spec-cell .k{font-family:var(--mono); font-size:1.2rem; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); margin-top:.4rem;}
+.spec-foot{padding:1.2rem 1.4rem; border-top:1px solid var(--line);}
+.spec-foot .k{font-family:var(--mono); font-size:1.2rem; letter-spacing:.18em; text-transform:uppercase; color:var(--dim);}
+.spec-foot p{color:var(--muted); font-size:1.5rem; line-height:1.5; margin-top:.4rem;}
 .detail-actions{display:flex; align-items:center; gap:1rem; padding-top:1.4rem; margin-top:auto;}
 .stepper{display:flex; align-items:center; gap:.2rem; border:1px solid var(--line-strong); border-radius:.25rem;}
 .stepper button{width:4.4rem; height:4.4rem; font-size:1.7rem; font-family:var(--mono); color:var(--ink); display:flex; align-items:center; justify-content:center;}
-.stepper .qv{font-family:var(--mono); font-size:1.6rem; min-width:3.4rem; text-align:center; font-variant-numeric:tabular-nums;}
+.stepper .qv{font-family:var(--mono); font-size:1.9rem; min-width:3.4rem; text-align:center; font-variant-numeric:tabular-nums;}
 .detail-actions{flex-wrap:wrap;}
 .detail-actions .buy-wrap{flex:1 1 100%; margin-top:.3rem;}
-.detail-actions .buy{width:100%; min-height:4.4rem; font-size:1.2rem;}
-.detail-note{display:none; margin-top:1.1rem; border:1px solid var(--line-strong); border-radius:.25rem; padding:.9rem 1.1rem; font-family:var(--mono); font-size:.8rem; letter-spacing:.18em; text-transform:uppercase; color:var(--ink);}
-.detail-note.show{display:block;}
+.detail-actions .buy{width:100%; min-height:4.4rem; font-size:1.5rem;}
+#detail-total{font-size:2.2rem; font-weight:700;}
+.detail-note{display:none; margin-top:1.1rem; border:1px solid var(--line-strong); border-radius:.25rem; padding:1rem 1.2rem; font-family:var(--mono); font-size:1.2rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink); line-height:1.5;}
+.detail-note.show{display:block; animation:noteIn var(--dur-screen) var(--ease);}
+@keyframes noteIn{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:none;}}
+.stepper .qv.tick{animation:qtyTick var(--dur-micro) var(--ease);}
+@keyframes qtyTick{from{transform:translateY(7px); opacity:.25;} to{transform:none; opacity:1;}}
+#detail-total.bump{animation:totalBump var(--dur-screen) var(--ease);}
+@keyframes totalBump{0%{transform:scale(1.09);} 100%{transform:scale(1);}}
+#detail-total{display:inline-block; transform-origin:left center;}
 
 /* ---------- PAY ---------- */
 .pay-wrap{flex:1; display:flex; flex-direction:column; align-items:center; min-height:0;}
@@ -200,15 +228,19 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
 .pay-card{margin-top:1.8rem; padding:1.8rem 2rem 1.6rem; text-align:center; border-radius:1.2rem;}
 .pay-card .qr-card{display:inline-block;}
 .pay-card .qr-card img{width:15.5rem; height:15.5rem;}
-.pay-card .hud{margin-top:1.1rem; color:var(--ink);}
+.pay-card .hud{margin-top:1.1rem; color:var(--ink); font-size:1.6rem;}
+#pay-breakdown{font-size:1.2rem;}
 .rails{display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; margin-top:1.1rem;}
-.rail-chip{font-family:var(--mono); font-size:.7rem; letter-spacing:.2em; text-transform:uppercase; border:1px solid var(--line-strong); color:var(--ink); padding:.5rem .8rem; border-radius:2rem;}
-.pay-timer{display:flex; align-items:center; gap:1.1rem; margin-top:1.8rem;}
-.ring-wrap{position:relative; width:5.6rem; height:5.6rem;}
+.rail-chip{font-family:var(--mono); font-size:1.3rem; letter-spacing:.16em; text-transform:uppercase; border:1px solid var(--line-strong); color:var(--ink); padding:.7rem 1.1rem; border-radius:2rem;}
+.pay-timer{display:flex; align-items:center; gap:1.3rem; margin-top:1.8rem;}
+.pay-timer .hud{font-size:1.2rem; line-height:1.6;}
+.ring-wrap{position:relative; width:7rem; height:7rem; flex:0 0 auto;}
 .ring-wrap svg{transform:rotate(-90deg);}
 .ring-bg{stroke:rgba(255,255,255,.14);}
 .ring-fg{stroke:#fff; transition:stroke-dashoffset .2s linear;}
-.ring-num{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:1.35rem; font-variant-numeric:tabular-nums;}
+.ring-num{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:2.4rem; font-variant-numeric:tabular-nums;}
+.ring-num.low{animation:lowPulse 1s ease-in-out infinite;}
+@keyframes lowPulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.14);}}
 .pay-actions{display:flex; gap:1rem; margin-top:auto; padding-top:1.6rem; width:100%;}
 .pay-actions .btn{flex:1;}
 .sim-link{margin-top:1.1rem; font-family:var(--mono); font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--dim); text-decoration:underline; text-underline-offset:.3rem; min-height:2.8rem; padding:0 1rem;}
@@ -216,24 +248,79 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
 
 /* ---------- VEND / THANKS ---------- */
 .center-wrap{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:0;}
-.vend-stage{position:relative; width:20rem; height:22rem; margin-top:2rem;}
-.vend-slot{position:absolute; top:0; left:50%; transform:translateX(-50%); width:15rem; height:3rem; border:1px solid var(--line-strong); border-radius:.3rem; display:flex; align-items:center; justify-content:center; background:var(--surface2);}
-.vend-item{position:absolute; top:3.4rem; left:50%; margin-left:-4.25rem; opacity:0;}
-.vend-item svg{height:11rem; width:auto;}
-.vend-item.drop{animation:drop 1.5s var(--ease) forwards;}
-@keyframes drop{0%{opacity:0; transform:translateY(-1rem);} 12%{opacity:1;} 70%{transform:translateY(8.1rem);} 82%{transform:translateY(7.2rem);} 92%{transform:translateY(7.9rem);} 100%{opacity:1; transform:translateY(7.7rem);}}
-.vend-tray{position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:19rem; height:4.6rem; border:1px solid var(--line-strong); border-radius:.4rem; background:var(--surface2);}
+/* Vend scene: an outlined schematic of the machine (slot -> shaft -> tray)
+   with a camera (the .vend-world) that pans down tracking the falling item.
+   World is 34rem x 52rem (680x1040 at design scale); the scene viewport
+   shows 36rem of it. Item lands with its box fully inside the tray outline. */
+.vend-scene{position:relative; width:34rem; max-width:100%; height:36rem; margin-top:1.4rem; overflow:hidden; border:1px solid var(--line); border-radius:.4rem; background:var(--surface2);}
+.vend-world{position:absolute; left:50%; top:0; width:34rem; height:52rem; margin-left:-17rem; transform:translateY(0); transition:transform 1.35s cubic-bezier(.5,.1,.6,1) .05s;}
+.vend-world.cam-end{transform:translateY(-16rem);}
+.vend-schematic{position:absolute; inset:0; width:34rem; height:52rem; display:block;}
+.vend-item{position:absolute; top:0; left:50%; margin-left:-5rem; width:10rem; transform:translateY(0) rotate(0deg); transition:transform .3s var(--ease);}
+.vend-item svg{width:10rem; height:auto; display:block;}
+.vend-item.tip{transform:translate(.35rem,.4rem) rotate(calc(var(--rot,6deg) * .45));}
+.vend-item.fall{transform:translateY(var(--land,36.9rem)) rotate(var(--rot,6deg)); transition:transform 1.18s cubic-bezier(.55,.08,.7,.2);}
+.vend-item.landed{animation:settle .38s var(--ease);}
+@keyframes settle{0%{transform:translateY(var(--land,36.9rem)) rotate(var(--rot,6deg));} 35%{transform:translateY(calc(var(--land,36.9rem) - .3rem)) rotate(var(--rot,6deg));} 100%{transform:translateY(var(--land,36.9rem)) rotate(var(--rot,6deg));}}
 .vend-dots{display:flex; gap:.5rem; margin-top:1.6rem;}
 .vend-dots span{width:.6rem; height:.6rem; border-radius:50%; background:var(--line-strong); animation:blink 1s infinite;}
 .vend-dots span:nth-child(2){animation-delay:.18s;} .vend-dots span:nth-child(3){animation-delay:.36s;}
 @keyframes blink{0%,100%{background:var(--line-strong);} 50%{background:#fff;}}
 #screen-thanks .headline{font-size:4rem; margin-top:2.2rem;}
+#screen-thanks .mark{animation:popIn .45s var(--ease);}
+@keyframes popIn{0%{transform:scale(.82); opacity:0;} 60%{transform:scale(1.04); opacity:1;} 100%{transform:scale(1); opacity:1;}}
 #screen-thanks .thanks-sub{margin-top:1.2rem;}
+#thanks-sub{font-size:1.2rem;}
+#thanks-count{font-size:1.5rem;}
+#screen-vend .hud{font-size:1.2rem;}
 
 @media (max-height:760px){ .attract-mark{margin-top:4vh;} .attract-head{font-size:3.6rem;} }
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation:none !important; transition:none !important;}
-  .vend-item.drop{opacity:1; transform:translateY(7.7rem);}
+}
+
+/* ---------- PHONE DEMO MODE (<700px) ----------
+   The 12-inch type floors are absolute px at design scale, so below 700px
+   the root size is HELD at the design scale (1rem = 20px): type does not
+   shrink, the layout reflows and stacks instead, and screens scroll
+   internally where their content no longer fits the small glass. */
+@media (max-width:700px){
+  html{font-size:20px;}
+  .screen{padding:1.2rem 1rem 1rem;}
+  .machine-footer{padding:0 1rem; font-size:.6rem; letter-spacing:.14em;}
+  /* attract: display headline is the one vw-relative element; corners drop */
+  #screen-attract{overflow-y:auto;}
+  #screen-attract .corner{display:none;}
+  .attract-mark{margin-top:3vh; width:110px; height:110px;}
+  .attract-head{font-size:13.5vw; max-width:100%;}
+  .browse-panel{flex-direction:column; text-align:center; max-width:100%;}
+  /* catalog: one big readable column */
+  .catalog-head{flex-direction:column; align-items:flex-start;}
+  .browse-chip{padding:.7rem 1rem .7rem .7rem; width:100%;}
+  .browse-chip img{width:3.4rem; height:3.4rem;}
+  .browse-chip .hud{line-height:1.3; letter-spacing:.12em;}
+  .pcard .slot, .pcard .stock{letter-spacing:.05em;}
+  .grid{grid-template-columns:1fr; grid-auto-rows:26rem;}
+  .pcard{min-height:0;}
+  .pcard .art{min-height:7rem;}
+  .pcard .art svg{max-height:10rem;}
+  /* detail stacks: art on top, 2-up nutrition */
+  .detail-hero{flex-direction:column;}
+  .detail-art{flex:none; min-height:15rem;}
+  .detail-art svg{height:13rem;}
+  .spec-grid{grid-template-columns:repeat(2,1fr);}
+  .spec-cell{border-right:none; border-bottom:1px solid var(--line);}
+  .spec-cell:nth-child(odd){border-right:1px solid var(--line);}
+  .spec-cell:nth-last-child(-n+2){border-bottom:none;}
+  /* pay: narrower QR card, timer stacks */
+  .pay-wrap{overflow-y:auto;}
+  .pay-card{padding:1.4rem 1rem 1.2rem; width:100%;}
+  .pay-card .qr-card img{width:10.5rem; height:10.5rem;}
+  .pay-timer{flex-direction:column; text-align:center;}
+  /* vend: the whole schematic scales down uniformly (zoom), choreography intact */
+  .vend-scene{height:30rem;}
+  .vend-world{zoom:.55; margin-left:-9.35rem;}
+  #screen-thanks .headline{font-size:3rem;}
 }
 </style>
 </head>
@@ -357,7 +444,7 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
         <div style="flex:1"></div>
         <div>
           <div class="hud" style="margin-bottom:.5rem;">[ Total ]</div>
-          <div class="price" id="detail-total" style="font-size:1.7rem;">$0.00</div>
+          <div class="price" id="detail-total">$0.00</div>
         </div>
         <div class="buy-wrap">
           <button class="btn btn-primary buy" id="detail-buy" type="button">Buy · Scan to Pay</button>
@@ -426,10 +513,33 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
     <div class="center-wrap">
       <div class="hud">[ 03 · Vend ]</div>
       <h2 class="headline" style="font-size:3rem; margin-top:.7rem;">Paid —<br>Dispensing</h2>
-      <div class="vend-stage">
-        <div class="vend-slot"><span class="hud" id="vend-slot-label">[ Slot — ]</span></div>
-        <div class="vend-item" id="vend-item"></div>
-        <div class="vend-tray"></div>
+      <div class="hud" id="vend-slot-label" style="margin-top:1rem;">[ Slot — ]</div>
+      <div class="vend-scene" aria-hidden="true">
+        <div class="vend-world" id="vend-world">
+          <svg class="vend-schematic" viewBox="0 0 680 1040" xmlns="http://www.w3.org/2000/svg">
+            <!-- machine frame -->
+            <rect x="14" y="8" width="652" height="1022" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2"/>
+            <!-- slot window -->
+            <rect x="200" y="18" width="280" height="242" fill="none" stroke="rgba(255,255,255,.30)" stroke-width="2" stroke-dasharray="10 8"/>
+            <text x="216" y="52" font-family="ui-monospace,Menlo,monospace" font-size="19" letter-spacing="4" fill="#6f6f77">[ SLOT ]</text>
+            <!-- shelf + coil the item rests on -->
+            <line x1="60" y1="260" x2="620" y2="260" stroke="rgba(255,255,255,.5)" stroke-width="3"/>
+            <path d="M250 260 l15 16 l15 -16 l15 16 l15 -16 l15 16 l15 -16 l15 16 l15 -16 l15 16 l15 -16 l15 16" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2.5"/>
+            <!-- drop shaft guides -->
+            <line x1="200" y1="276" x2="200" y2="700" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-dasharray="8 9"/>
+            <line x1="480" y1="276" x2="480" y2="700" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-dasharray="8 9"/>
+            <text x="500" y="486" font-family="ui-monospace,Menlo,monospace" font-size="19" letter-spacing="4" fill="#6f6f77">[ DROP</text>
+            <text x="500" y="514" font-family="ui-monospace,Menlo,monospace" font-size="19" letter-spacing="4" fill="#6f6f77">SHAFT ]</text>
+            <!-- collection tray -->
+            <line x1="90" y1="700" x2="590" y2="700" stroke="rgba(255,255,255,.55)" stroke-width="3"/>
+            <line x1="90" y1="700" x2="90" y2="1010" stroke="rgba(255,255,255,.45)" stroke-width="2.5"/>
+            <line x1="590" y1="700" x2="590" y2="1010" stroke="rgba(255,255,255,.45)" stroke-width="2.5"/>
+            <line x1="90" y1="1010" x2="590" y2="1010" stroke="rgba(255,255,255,.55)" stroke-width="3"/>
+            <path d="M140 1010 L210 930 M220 1010 L290 930 M460 1010 L530 930 M380 1010 L450 930" stroke="rgba(255,255,255,.13)" stroke-width="2"/>
+            <text x="112" y="748" font-family="ui-monospace,Menlo,monospace" font-size="19" letter-spacing="4" fill="#6f6f77">[ COLLECTION TRAY ]</text>
+          </svg>
+          <div class="vend-item" id="vend-item"></div>
+        </div>
       </div>
       <div class="vend-dots"><span></span><span></span><span></span></div>
       <div class="hud" style="margin-top:1.1rem;">[ Collect Below ]</div>
@@ -470,54 +580,63 @@ const PRODUCTS = [
   { id:'chips', slot:'A1', name:'Sea Salt Chips', brand:'Crunch · Potato Co.',
     desc:'Thick-cut potato chips with sea salt and nothing to hide. The crunch is the spec.',
     price:1.50, stock:8, art:'bag', accent:'#C9A227', label:'CRUNCH', sub:'SEA SALT',
+    blurb:'Thick-cut, sea salt, serious crunch.',
     serving:'Per pack · 42 g', cal:160, fat:10, sodium:170, carbs:15, sugar:0, protein:2,
     allergens:'None of the major allergens. Cooked in sunflower oil.',
     ingredients:'Potatoes, sunflower oil, sea salt.' },
   { id:'cookies', slot:'A2', name:'Choco Chip Cookies', brand:'Bakehaus',
     desc:'Four baked cookies with actual chocolate chips. Soft center, structural integrity questionable.',
     price:1.75, stock:6, art:'cookies', accent:'#A9713F', label:'BAKEHAUS', sub:'CHOCO CHIP',
+    blurb:'Four cookies, actual chocolate chips.',
     serving:'Per pack · 58 g', cal:210, fat:9, sodium:150, carbs:31, sugar:17, protein:2,
     allergens:'Contains wheat, milk, egg, soy.',
     ingredients:'Wheat flour, chocolate chips (sugar, cocoa butter, cocoa mass), butter, brown sugar, egg, baking soda, salt.' },
   { id:'noir', slot:'A3', name:'Noir 70% Chocolate', brand:'Noir',
     desc:'A serious dark chocolate bar. Seventy percent cacao, zero small talk.',
     price:2.00, stock:5, art:'bar', accent:'#7C4A3C', label:'NOIR', sub:'70% CACAO',
+    blurb:'70% cacao. Zero small talk.',
     serving:'Per bar · 40 g', cal:170, fat:12, sodium:15, carbs:13, sugar:8, protein:2,
     allergens:'May contain milk and tree nuts.',
     ingredients:'Cacao mass, sugar, cacao butter, vanilla.' },
   { id:'cola', slot:'A4', name:'Volt Cola', brand:'Volt',
     desc:'Cold cola, full sugar, full voltage. Served at exactly the temperature the machine prefers: cold.',
     price:1.25, stock:10, art:'can', accent:'#5E6E7E', label:'VOLT', sub:'COLA',
+    blurb:'Cold, full sugar, full voltage.',
     serving:'Per can · 330 ml', cal:140, fat:0, sodium:45, carbs:39, sugar:39, protein:0,
     allergens:'None.',
     ingredients:'Carbonated water, sugar, caramel color, phosphoric acid, natural flavors, caffeine.' },
   { id:'water', slot:'A5', name:'Clara Spring Water', brand:'Clara',
     desc:'Spring water. For the ones whose hydration game is as serious as their snack game.',
     price:1.00, stock:12, art:'bottle', accent:'#8FA6AD', label:'CLARA', sub:'SPRING WATER',
+    blurb:'Spring water. Hydration, handled.',
     serving:'Per bottle · 500 ml', cal:0, fat:0, sodium:10, carbs:0, sugar:0, protein:0,
     allergens:'None.',
     ingredients:'Spring water. That is the whole list.' },
   { id:'trailmix', slot:'B1', name:'Sierra Trail Mix', brand:'Sierra',
     desc:'Peanuts, almonds, raisins and chocolate pieces. The expedition ration of the catalog.',
     price:2.25, stock:0, art:'bagwin', accent:'#8C6D4F', label:'SIERRA', sub:'TRAIL MIX',
+    blurb:'Peanuts, almonds, raisins, chocolate.',
     serving:'Per pack · 50 g', cal:180, fat:11, sodium:60, carbs:16, sugar:9, protein:5,
     allergens:'Contains peanuts and tree nuts (almond, cashew).',
     ingredients:'Peanuts, almonds, raisins, cashews, chocolate pieces (sugar, cocoa), sunflower oil, salt.' },
   { id:'granola', slot:'B2', name:'Oat + Honey Granola Bar', brand:'Field',
     desc:'Rolled oats and honey in bar form. Breakfast, portioned to the gram.',
     price:1.50, stock:7, art:'bar', slim:true, accent:'#B08D2E', label:'FIELD', sub:'OAT + HONEY',
+    blurb:'Oats and honey, in bar form.',
     serving:'Per bar · 45 g', cal:190, fat:6, sodium:95, carbs:29, sugar:11, protein:3,
     allergens:'Contains oats. May contain peanuts and tree nuts.',
     ingredients:'Rolled oats, honey, brown rice syrup, almonds, sunflower seeds, sea salt.' },
   { id:'meatsticks', slot:'B3', name:'Rancho Meat Sticks', brand:'Rancho',
     desc:'Three smoked beef-and-pork sticks. Yes, this machine stocks meat sticks. No, we will not be taking questions.',
     price:2.50, stock:4, art:'sticks', accent:'#96503F', label:'MEAT STICKS', sub:'SMOKED · 3 PACK', tag:'[ Staff Pick ]',
+    blurb:'Smoked beef + pork. Yes, really.',
     serving:'Per pack · 3 sticks · 42 g', cal:140, fat:11, sodium:530, carbs:2, sugar:1, protein:9,
     allergens:'None of the major allergens. Made in a facility that also handles milk.',
     ingredients:'Beef, pork, sea salt, spices, cultured celery powder, garlic, smoke.' },
   { id:'crackers', slot:'B4', name:'Salt Crackers', brand:'Crumb',
     desc:'Six saltine-style crackers. The control group of snacks: plain, salty, dependable.',
     price:1.25, stock:9, art:'bag', accent:'#B4A078', label:'CRUMB', sub:'SALT CRACKERS',
+    blurb:'Plain, salty, dependable.',
     serving:'Per pack · 36 g', cal:130, fat:4, sodium:230, carbs:22, sugar:1, protein:2,
     allergens:'Contains wheat.',
     ingredients:'Enriched wheat flour, soybean oil, sea salt, yeast, baking soda.' },
@@ -594,7 +713,7 @@ function artSVG(p){
       <rect x="52" y="118" width="96" height="62" fill="${a}"/>
       ${txt(100, 143, words[0], 16.5, '#050505', 850, 1)}
       ${txt(100, 166, words.slice(1).join(' '), 16.5, '#050505', 850, 1)}
-      ${txt(100, 208, p.sub, 8.5, '#a8a8b0', 600, 1.8, "ui-monospace,Menlo,monospace")}`;
+      ${txt(100, 208, p.sub, 7, '#a8a8b0', 600, 1.2, "ui-monospace,Menlo,monospace")}`;
   }
   return `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${p.name} pack illustration">${inner}</svg>`;
 }
@@ -610,12 +729,25 @@ function clearTimers(){
   if (vendTO){ clearTimeout(vendTO); vendTO = null; }
   if (thanksInt){ clearInterval(thanksInt); thanksInt = null; }
 }
+let navTO = null;
 function show(name){
   clearTimers();
-  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-  $('#screen-' + name).classList.add('active');
-  state.screen = name;
-  window.scrollTo(0, 0);
+  const stage = document.querySelector('.stage');
+  const swap = () => {
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+    $('#screen-' + name).classList.add('active');
+    state.screen = name;
+    window.scrollTo(0, 0);
+    stage.classList.remove('switching');
+  };
+  /* uniform screen transition: the stage dips (fade + settle) while the
+     screens swap mid-dip, and the incoming screen rises in via screenIn.
+     Reduced motion (or same-screen) swaps instantly — no dip, no delay. */
+  if (state.screen === name || !document.querySelector('.screen.active') ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches){ swap(); return; }
+  stage.classList.add('switching');
+  clearTimeout(navTO);
+  navTO = setTimeout(swap, 120);
 }
 
 /* ---------- attract clock ---------- */
@@ -640,7 +772,7 @@ function renderCatalog(){
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'pcard' + (out ? ' soldout' : '');
-    card.disabled = out;
+    if (out) card.setAttribute('aria-disabled', 'true');
     card.setAttribute('aria-label', p.name + ', ' + money(p.price) + (out ? ', sold out' : ', ' + p.stock + ' in stock'));
     card.innerHTML = `
       <span class="hud slot">[ ${p.slot} ]</span>
@@ -648,8 +780,19 @@ function renderCatalog(){
       <span class="art">${artSVG(p)}</span>
       <span class="pname">${p.name}</span>
       ${p.tag ? `<span class="tag">${p.tag}</span>` : ''}
+      <span class="pblurb">${p.blurb}</span>
       <span class="prow"><span class="pprice price">${money(p.price)}</span><span class="punit">/ PACK</span></span>`;
     if (!out) card.addEventListener('click', () => openDetail(p, false));
+    else card.addEventListener('click', () => {
+      /* sold out: one tasteful shake, no navigation */
+      card.classList.remove('shake');
+      void card.offsetWidth;
+      card.classList.add('shake');
+      card.addEventListener('animationend', () => {
+        card.classList.remove('shake');
+        card.style.animation = 'none';
+      }, { once:true });
+    });
     grid.appendChild(card);
   });
 }
@@ -690,8 +833,14 @@ function openDetail(p, expired){
 }
 function maxQty(){ return Math.min(state.product.stock, 10); }
 function syncQty(){
-  $('#qty-val').textContent = state.qty;
-  $('#detail-total').textContent = money(state.product.price * state.qty);
+  const qv = $('#qty-val'), tot = $('#detail-total');
+  qv.textContent = state.qty;
+  tot.textContent = money(state.product.price * state.qty);
+  /* number transitions: qty ticks up into place, total pulses — no jump cuts */
+  [qv, tot].forEach(el => el.classList.remove('tick', 'bump'));
+  void qv.offsetWidth;
+  qv.classList.add('tick');
+  tot.classList.add('bump');
   $('#qty-minus').disabled = state.qty <= 1;
   $('#qty-plus').disabled = state.qty >= maxQty();
   const buy = $('#detail-buy');
@@ -718,6 +867,7 @@ function openPay(){
   const render = () => {
     ring.style.strokeDashoffset = RING_C * (1 - remain / PAY_SECONDS);
     num.textContent = Math.ceil(remain);
+    num.classList.toggle('low', remain <= 10);
   };
   render();
   const t0 = Date.now();
@@ -731,17 +881,36 @@ $('#pay-cancel').addEventListener('click', () => openDetail(state.product, false
 $('#pay-sim').addEventListener('click', openVend);
 
 /* ---------- vend + thanks ---------- */
+/* fall choreography per pack type: [tumble rotation, landing translateY].
+   Landing values are tuned so the item's rotated box rests fully inside
+   the tray outline (floor at 50.5rem in world space). */
+const FALL = { can:['16deg','36.4rem'], bottle:['16deg','36.4rem'], bar:['10deg','36.55rem'] };
 function openVend(){
   const p = state.product;
   p.stock = Math.max(0, p.stock - state.qty);
   $('#vend-slot-label').textContent = `[ Slot ${p.slot} · ×${state.qty} ]`;
-  const item = $('#vend-item');
+  const item = $('#vend-item'), world = $('#vend-world');
   item.innerHTML = artSVG(p);
+  const f = FALL[p.art] || ['6deg','36.9rem'];
+  item.style.setProperty('--rot', f[0]);
+  item.style.setProperty('--land', f[1]);
   show('vend');
-  item.classList.remove('drop');
+  world.classList.remove('cam-end');
+  item.classList.remove('tip','fall','landed');
   void item.offsetWidth;
-  item.classList.add('drop');
-  vendTO = setTimeout(openThanks, 2400);
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    /* end state only: item resting in the tray, camera settled on it */
+    item.classList.add('fall');
+    world.classList.add('cam-end');
+    vendTO = setTimeout(openThanks, 1600);
+    return;
+  }
+  /* timings include the 120ms screen-transition dip before the vend
+     screen is fully in, so the tip is never missed */
+  setTimeout(() => item.classList.add('tip'), 150);
+  setTimeout(() => { item.classList.add('fall'); world.classList.add('cam-end'); }, 460);
+  setTimeout(() => item.classList.add('landed'), 460 + 1200);
+  vendTO = setTimeout(openThanks, 460 + 1200 + 1100);
 }
 function openThanks(){
   $('#thanks-sub').textContent = `[ ${state.txn} · ${state.product.name} ×${state.qty} · Dispensed ]`;
