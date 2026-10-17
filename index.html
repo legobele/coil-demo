@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#050505">
 <meta name="robots" content="noindex, nofollow">
 <title>COIL — Unit 01 · by Nivelato Labs</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-5 -5 110 110'%3E%3Crect x='-5' y='-5' width='110' height='110' fill='%23050505'/%3E%3Cg fill='none' stroke='white' stroke-width='6.5'%3E%3Cpath d='M44 56 H57 V43 H31 V69 H70 V30 H18 V82 H83 V17'/%3E%3C/g%3E%3C/svg%3E">
@@ -27,14 +28,27 @@
   --mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
   --disp:'Anybody',Arial,Helvetica,sans-serif;
   --ui:Arial,Helvetica,sans-serif;
+  --footer-h:2.6rem;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html{font-size:min(calc(100vw / 54), calc(100vh / 96), 22px);}
+/* Fluid root scale: 1rem tracks the viewport so the whole UI scales as one
+   system. At the 1080x1920 design size 1rem = 20px exactly (100vw/54 and
+   100dvh/96 both = 20), which is where the 12-inch type floors are law.
+   Below that, everything scales down proportionally (fit wins over floors
+   on a phone demo); the 6px floor stops shrinkage below ~324px wide.
+   Above the design size it keeps scaling to a 26px cap (at 1440x2560)
+   so big kiosk panels fill their glass instead of floating in a corner.
+   dvh (not vh) because Android Chrome/WebView chrome makes 100vh lie. */
+html{
+  font-size:min(calc(100vw / 54), calc(100vh / 96), 20px);
+  font-size:clamp(6px, min(calc(100vw / 54), calc(100dvh / 96)), 26px);
+  -webkit-text-size-adjust:100%; text-size-adjust:100%;
+}
 html,body{height:100%;}
 body{
   background:var(--bg); color:var(--ink); font-family:var(--ui);
   overflow:hidden; user-select:none; -webkit-user-select:none;
-  touch-action:manipulation;
+  touch-action:manipulation; overscroll-behavior:none;
 }
 /* measurement-grid motif */
 body::before{
@@ -58,7 +72,10 @@ body::before{
 /* ---------- glass (interactive layer only) ---------- */
 .glass{
   background:rgba(255,255,255,.07);
-  -webkit-backdrop-filter:blur(14px) saturate(150%); backdrop-filter:blur(14px) saturate(150%);
+  /* blur kept modest on purpose: backdrop-filter is the priciest effect in
+     the app on cheap Android kiosk GPUs; 10px/140% reads the same as
+     14px/150% here for a fraction of the compositing cost */
+  -webkit-backdrop-filter:blur(10px) saturate(140%); backdrop-filter:blur(10px) saturate(140%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14), 0 1.2rem 3rem rgba(0,0,0,.45);
   border-radius:1rem;
 }
@@ -82,21 +99,33 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
 .btn[disabled]{opacity:.35; pointer-events:none;}
 
 /* ---------- screens ---------- */
-.screen{position:absolute; inset:0; bottom:2.6rem; display:none; flex-direction:column; padding:2rem 2.2rem 1.6rem;}
+.screen{position:absolute; inset:0; bottom:var(--footer-h); display:none; flex-direction:column; padding:2rem 2.2rem 1.6rem;}
 .screen.active{display:flex; animation:screenIn var(--dur-screen) var(--ease);}
 @keyframes screenIn{from{opacity:0; transform:translateY(14px) scale(.996);} to{opacity:1; transform:none;}}
 .topbar{display:flex; align-items:center; justify-content:space-between; gap:1rem; min-height:3.5rem;}
+.topbar .hud{white-space:nowrap;}
 .topbar .brand{display:flex; align-items:center; gap:.9rem;}
 .mark{color:var(--ink); display:block;}
+/* marks size in rem (CSS beats the width/height attributes) so they ride
+   the fluid root scale like everything else — a px-fixed mark crowds a
+   small screen while the rest of the UI shrinks around it */
+.topbar .mark{width:2.2rem; height:2.2rem;}
+.attract-mark{width:7.5rem; height:7.5rem;}
+#screen-thanks .center-wrap>.mark{width:8.5rem; height:8.5rem;}
+.byline .mark{width:1.05rem; height:1.05rem;}
 .wordmark{font-family:var(--disp); font-weight:900; font-stretch:150%; text-transform:uppercase; letter-spacing:.08em; font-size:1.15rem;}
 
-/* footer */
+/* footer: spans never collide — they wrap as whole units, and under the
+   small-width breakpoint the footer becomes a clean centered stack
+   (taller --footer-h keeps screens clear of it) */
 .machine-footer{
-  position:absolute; left:0; right:0; bottom:0; height:2.6rem; z-index:5;
-  display:flex; align-items:center; justify-content:space-between; padding:0 2.2rem;
+  position:absolute; left:0; right:0; bottom:0; height:var(--footer-h); z-index:5;
+  display:flex; align-items:center; align-content:center; justify-content:space-between;
+  flex-wrap:wrap; column-gap:1.6rem; row-gap:.15rem; padding:0 2.2rem;
   border-top:1px solid var(--line); background:rgba(5,5,5,.85);
   font-family:var(--mono); font-size:.72rem; letter-spacing:.26em; text-transform:uppercase; color:var(--dim);
 }
+.machine-footer span{white-space:nowrap;}
 
 /* ---------- ATTRACT ---------- */
 #screen-attract{align-items:center; text-align:center; justify-content:flex-start; cursor:pointer;}
@@ -105,13 +134,20 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
 #screen-attract .c-bl{bottom:1.8rem; left:2.2rem;} #screen-attract .c-br{bottom:1.8rem; right:2.2rem; text-align:right;}
 .attract-mark{margin-top:9vh;}
 .byline{display:flex; align-items:center; justify-content:center; gap:.55rem; color:var(--muted);}
-.byline .mark{color:var(--muted);}
+.byline .mark{color:var(--muted); flex:0 0 auto;}
 .attract-clock{font-family:var(--mono); font-size:2.6rem; letter-spacing:.12em; margin-top:4.5vh; font-variant-numeric:tabular-nums;}
 .attract-date{margin-top:.5rem;}
 .attract-head{font-size:4.6rem; margin-top:3.5vh; max-width:12ch;}
 .attract-sub{margin-top:1.4rem; max-width:34ch; line-height:1.5; color:var(--muted); font-size:1.5rem;}
-.start-pill{margin-top:4.5vh; font-size:1.2rem; padding:0 3rem; min-height:4.6rem; animation:pulse 2.6s ease-in-out infinite;}
-@keyframes pulse{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14), 0 0 0 0 rgba(255,255,255,.22);} 50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14), 0 0 0 1.1rem rgba(255,255,255,0);}}
+.start-pill{margin-top:4.5vh; font-size:1.2rem; padding:0 3rem; min-height:4.6rem; position:relative;}
+/* the attract pulse is a halo ring on ::after animating transform+opacity
+   only — the old version animated box-shadow, which repaints every frame
+   and stutters on cheap Android kiosk GPUs */
+.start-pill::after{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  border:1px solid rgba(255,255,255,.45); opacity:0; animation:pulse 2.6s var(--ease) infinite;
+}
+@keyframes pulse{0%{transform:scale(1); opacity:.5;} 70%,100%{transform:scale(1.07); opacity:0;}}
 .browse-panel{
   margin-top:auto; margin-bottom:1.2rem; display:flex; align-items:center; gap:1.4rem;
   padding:1.1rem 1.4rem; text-align:left; max-width:38rem;
@@ -263,9 +299,9 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
 .vend-item.landed{animation:settle .38s var(--ease);}
 @keyframes settle{0%{transform:translateY(var(--land,36.9rem)) rotate(var(--rot,6deg));} 35%{transform:translateY(calc(var(--land,36.9rem) - .3rem)) rotate(var(--rot,6deg));} 100%{transform:translateY(var(--land,36.9rem)) rotate(var(--rot,6deg));}}
 .vend-dots{display:flex; gap:.5rem; margin-top:1.6rem;}
-.vend-dots span{width:.6rem; height:.6rem; border-radius:50%; background:var(--line-strong); animation:blink 1s infinite;}
+.vend-dots span{width:.6rem; height:.6rem; border-radius:50%; background:#fff; opacity:.25; animation:blink 1s infinite;}
 .vend-dots span:nth-child(2){animation-delay:.18s;} .vend-dots span:nth-child(3){animation-delay:.36s;}
-@keyframes blink{0%,100%{background:var(--line-strong);} 50%{background:#fff;}}
+@keyframes blink{0%,100%{opacity:.25;} 50%{opacity:1;}}
 #screen-thanks .headline{font-size:4rem; margin-top:2.2rem;}
 #screen-thanks .mark{animation:popIn .45s var(--ease);}
 @keyframes popIn{0%{transform:scale(.82); opacity:0;} 60%{transform:scale(1.04); opacity:1;} 100%{transform:scale(1); opacity:1;}}
@@ -279,48 +315,43 @@ button{font-family:inherit; color:inherit; background:none; border:none; cursor:
   *,*::before,*::after{animation:none !important; transition:none !important;}
 }
 
-/* ---------- PHONE DEMO MODE (<700px) ----------
-   The 12-inch type floors are absolute px at design scale, so below 700px
-   the root size is HELD at the design scale (1rem = 20px): type does not
-   shrink, the layout reflows and stacks instead, and screens scroll
-   internally where their content no longer fits the small glass. */
+/* ---------- SMALL-WIDTH STRUCTURE (<700px) ----------
+   No root-size tricks here: the fluid root scale (above) already shrank
+   every rem proportionally, so nothing can overflow horizontally. This
+   block only re-arranges structure that reads badly in a narrow column:
+   the footer stacks its spans, the catalog goes single-file, the detail
+   hero stacks, nutrition drops to 2-up, and tall screens scroll inside
+   themselves. All sizes stay in rem — they ride the same scale. */
 @media (max-width:700px){
-  html{font-size:20px;}
-  .screen{padding:1.2rem 1rem 1rem;}
-  .machine-footer{padding:0 1rem; font-size:.6rem; letter-spacing:.14em;}
-  /* attract: display headline is the one vw-relative element; corners drop */
-  #screen-attract{overflow-y:auto;}
+  :root{--footer-h:4.4rem;}
+  .screen{padding:1.4rem 1.6rem 1.2rem;}
+  .machine-footer{flex-direction:column; flex-wrap:nowrap; justify-content:center; align-items:center; gap:.3rem; padding:.4rem 1rem;}
+  /* attract: corner tags are texture at this size and fight the lockup */
+  #screen-attract{overflow-y:auto; scrollbar-width:none;}
+  #screen-attract::-webkit-scrollbar{display:none;}
   #screen-attract .corner{display:none;}
-  .attract-mark{margin-top:3vh; width:110px; height:110px;}
-  .attract-head{font-size:13.5vw; max-width:100%;}
-  .browse-panel{flex-direction:column; text-align:center; max-width:100%;}
-  /* catalog: one big readable column */
+  .attract-mark{margin-top:3.5vh;}
+  .attract-head{max-width:100%;}
+  /* catalog: one readable column; rows size to content (no fixed row hack) */
   .catalog-head{flex-direction:column; align-items:flex-start;}
-  .browse-chip{padding:.7rem 1rem .7rem .7rem; width:100%;}
-  .browse-chip img{width:3.4rem; height:3.4rem;}
-  .browse-chip .hud{line-height:1.3; letter-spacing:.12em;}
-  .pcard .slot, .pcard .stock{letter-spacing:.05em;}
-  .grid{grid-template-columns:1fr; grid-auto-rows:26rem;}
-  .pcard{min-height:0;}
-  .pcard .art{min-height:7rem;}
-  .pcard .art svg{max-height:10rem;}
-  /* detail stacks: art on top, 2-up nutrition */
+  .browse-chip{width:100%;}
+  .grid{grid-template-columns:1fr;}
+  /* single-file cards are wide — let the pack art use the room */
+  .pcard .art svg{height:15rem;}
+  /* detail stacks: art on top, info below; nutrition 2-up */
   .detail-hero{flex-direction:column;}
-  .detail-art{flex:none; min-height:15rem;}
-  .detail-art svg{height:13rem;}
+  .detail-art{flex:none; min-height:16rem;}
+  .detail-art svg{height:14rem;}
   .spec-grid{grid-template-columns:repeat(2,1fr);}
   .spec-cell{border-right:none; border-bottom:1px solid var(--line);}
   .spec-cell:nth-child(odd){border-right:1px solid var(--line);}
   .spec-cell:nth-last-child(-n+2){border-bottom:none;}
-  /* pay: narrower QR card, timer stacks */
-  .pay-wrap{overflow-y:auto;}
-  .pay-card{padding:1.4rem 1rem 1.2rem; width:100%;}
-  .pay-card .qr-card img{width:10.5rem; height:10.5rem;}
-  .pay-timer{flex-direction:column; text-align:center;}
-  /* vend: the whole schematic scales down uniformly (zoom), choreography intact */
-  .vend-scene{height:30rem;}
-  .vend-world{zoom:.55; margin-left:-9.35rem;}
-  #screen-thanks .headline{font-size:3rem;}
+  /* pay: card fits the column, content may scroll inside the screen */
+  .pay-wrap{overflow-y:auto; scrollbar-width:none;}
+  .pay-wrap::-webkit-scrollbar{display:none;}
+  .pay-card{width:100%;}
+  .pay-timer{flex-wrap:wrap; justify-content:center; text-align:center;}
+  .pay-actions{flex-direction:column;}
 }
 </style>
 </head>
@@ -730,13 +761,22 @@ function clearTimers(){
   if (thanksInt){ clearInterval(thanksInt); thanksInt = null; }
 }
 let navTO = null;
-function show(name){
+/* Android/browser Back handling: every screen pushes one history entry,
+   so Back walks the flow backwards along its own back edges instead of
+   stranding a user mid-checkout (or ejecting them from the kiosk page).
+   Screens that must never be re-entered backwards (pay without a live
+   payment window, the one-way vend/thanks doors) are sanitized to the
+   screen their own flow would dismiss to. */
+history.replaceState({ screen:'attract' }, '', location.pathname + location.search);
+function show(name, opts){
   clearTimers();
   const stage = document.querySelector('.stage');
   const swap = () => {
+    const changed = state.screen !== name;
     document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
     $('#screen-' + name).classList.add('active');
     state.screen = name;
+    if (changed && !(opts && opts.fromPop)) history.pushState({ screen:name }, '', '#' + name);
     window.scrollTo(0, 0);
     stage.classList.remove('switching');
   };
@@ -749,6 +789,14 @@ function show(name){
   clearTimeout(navTO);
   navTO = setTimeout(swap, 120);
 }
+window.addEventListener('popstate', () => {
+  const target = (history.state && history.state.screen) || 'attract';
+  if (target === 'pay') return show('detail', { fromPop:true });   /* pay cancels cleanly */
+  if (target === 'vend') return show('catalog', { fromPop:true }); /* one-way door */
+  if (target === 'thanks') return show('attract', { fromPop:true });
+  if (target === 'detail' && !state.product) return show('catalog', { fromPop:true });
+  show(target, { fromPop:true });
+});
 
 /* ---------- attract clock ---------- */
 function tickClock(){

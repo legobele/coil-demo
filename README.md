@@ -36,10 +36,55 @@ scale (1rem = 20px), no matter the layout:
 Decorative HUD chrome (corner tags, footer, slot codes in topbars)
 may stay smaller; anything that informs a decision may not. The
 catalog runs 2 columns so the type fits — fewer, bigger cards,
-scrolling is fine. Below 700px wide (the phone demo), the root size
-is held at the design scale so the floors stay absolute: the type
-does NOT shrink, the layout reflows into a single column and the
-screens scroll internally instead.
+scrolling is fine.
+
+## Fluid scaling
+
+There are no fixed device modes. The root font size is driven off
+the viewport — `clamp(6px, min(100vw / 54, 100dvh / 96), 26px)` —
+so 1rem is exactly 20px at the 1080x1920 design size (where the
+12-inch floors above are law) and the whole UI scales as one system
+in every direction from there:
+
+- **Smaller screens** (the phone demo): everything scales down
+  proportionally. Fit wins over the floors — nothing clips, nothing
+  scrolls sideways; below ~700px the structure also adapts (footer
+  spans stack into centered lines, catalog goes single-file, the
+  detail hero stacks, nutrition drops to 2-up, tall screens scroll
+  internally).
+- **Bigger panels**: scaling continues past the design size to a
+  26px root cap (reached at 1440x2560), so a large kiosk fills its
+  glass instead of floating the design in a corner.
+
+Verified with a screenshot + horizontal-overflow assertion matrix
+(scrollWidth == clientWidth everywhere) at 360x640, 390x844,
+430x932, 768x1024, 1080x1920 and 1440x2560 — see
+`samples/fluid-*-v4.png`.
+
+## Target runtime: Android kiosks
+
+The real deployment target is a cheap Android panel running Chrome
+or an Android WebView inside a kiosk browser (Fully Kiosk-style
+lockdown). The build is shaped for that:
+
+- **Dynamic viewport units** (`dvh`) wherever height matters —
+  Android browser chrome makes `100vh` lie. Viewport meta uses
+  `viewport-fit=cover`; text-size-adjust is pinned so Chrome's font
+  boosting can't inflate pieces of the layout.
+- **Touch is tuned for poking**: `touch-action: manipulation` (no
+  double-tap zoom, no 300ms delay), no tap-highlight flash,
+  overscroll/pull-to-refresh disabled.
+- **Cheap-GPU performance**: animations run on transform/opacity
+  only. The attract pulse is a transform/opacity halo (it used to
+  animate box-shadow — a repaint per frame); backdrop blur on the
+  glass is capped at 10px/140% because backdrop-filter is the
+  priciest effect on low-end panel SoCs.
+- **Back button**: the app is a single-page state machine, and
+  every screen pushes one history entry, so Android/browser Back
+  walks the flow backwards along its own back edges: pay cancels
+  back to the product, vend/thanks (one-way doors) dismiss to the
+  catalog/attract. A user can never be stranded mid-checkout or
+  ejected out of the page by one Back press.
 
 ## Motion
 
@@ -68,8 +113,8 @@ Open `index.html` in a browser, or serve the folder statically:
 
     python3 -m http.server 8321 --directory ~/workspace/vending-ui
 
-Designed for a 1080x1920 portrait touchscreen; scales down to a
-phone browser for demoing.
+Designed for a 1080x1920 portrait touchscreen on Android; the
+fluid scale (above) adapts it to any panel or phone browser.
 
 ## Flow
 
