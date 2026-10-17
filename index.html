@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<title>COIL — Unit 01 · by Nivelato Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-5 -5 110 110'%3E%3Crect x='-5' y='-5' width='110' height='110' fill='%23050505'/%3E%3Cg fill='none' stroke='white' stroke-width='6.5'%3E%3Cpath d='M44 56 H57 V43 H31 V69 H70 V30 H18 V82 H83 V17'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+@font-face{
+  font-family:'Anybody';
+  src:url('assets/Anybody-Variable.ttf') format('truetype');
+  font-weight:100 900;
+  font-display:swap;
+}
+/* ---------- Labs Monochrome tokens (DESIGN_SYSTEM_LABS.md) ---------- */
+:root{
+  --bg:#050505; --surface2:#0a0a0b; --card:#0e0e10; --raised:#16161a;
+  --line:rgba(255,255,255,.14); --line-strong:rgba(255,255,255,.28);
+  --ink:#fafafa; --muted:#a8a8b0; --dim:#6f6f77;
+  --accent:#ffffff;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+  --disp:'Anybody',Arial,Helvetica,sans-serif;
+  --ui:Arial,Helvetica,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{font-size:min(calc(100vw / 54), calc(100vh / 96), 22px);}
+html,body{height:100%;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--ui);
+  overflow:hidden; user-select:none; -webkit-user-select:none;
+  touch-action:manipulation;
+}
+/* measurement-grid motif */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.040) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.040) 1px, transparent 1px),
+    linear-gradient(rgba(255,255,255,.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.075) 1px, transparent 1px);
+  background-size:2.8rem 2.8rem, 2.8rem 2.8rem, 14rem 14rem, 14rem 14rem;
+}
+.stage{position:relative; z-index:1; height:100dvh; display:flex; flex-direction:column;}
+
+/* ---------- type ---------- */
+.hud{font-family:var(--mono); text-transform:uppercase; letter-spacing:.28em; font-size:.78rem; color:var(--muted);}
+.hud b{color:var(--ink); font-weight:600;}
+.headline{font-family:var(--disp); font-weight:850; font-stretch:150%; text-transform:uppercase; line-height:.98; letter-spacing:.01em;}
+.price{font-family:var(--mono); font-variant-numeric:tabular-nums;}
+
+/* ---------- glass (interactive layer only) ---------- */
+.glass{
+  background:rgba(255,255,255,.07);
+  -webkit-backdrop-filter:blur(14px) saturate(150%); backdrop-filter:blur(14px) saturate(150%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14), 0 1.2rem 3rem rgba(0,0,0,.45);
+  border-radius:1rem;
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{background:rgba(18,18,22,.94);}
+}
+
+/* ---------- buttons ---------- */
+button{font-family:inherit; color:inherit; background:none; border:none; cursor:pointer;}
+.btn{
+  min-height:3.6rem; min-width:3.6rem; padding:0 1.8rem;
+  display:inline-flex; align-items:center; justify-content:center; gap:.7rem;
+  border-radius:.25rem; font-family:var(--mono); text-transform:uppercase;
+  letter-spacing:.22em; font-size:1rem; transition:transform .18s var(--ease), background .18s var(--ease), color .18s var(--ease);
+}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--accent); color:#050505; font-weight:700;}
+.btn-ghost{box-shadow:inset 0 0 0 1px var(--line-strong); color:var(--ink);}
+.btn-glass{border-radius:2.2rem;}
+.btn[disabled]{opacity:.35; pointer-events:none;}
+
+/* ---------- screens ---------- */
+.screen{position:absolute; inset:0; bottom:2.6rem; display:none; flex-direction:column; padding:2rem 2.2rem 1.6rem;}
+.screen.active{display:flex; animation:screenIn .38s var(--ease);}
+@keyframes screenIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+.topbar{display:flex; align-items:center; justify-content:space-between; gap:1rem; min-height:3.5rem;}
+.topbar .brand{display:flex; align-items:center; gap:.9rem;}
+.mark{color:var(--ink); display:block;}
+.wordmark{font-family:var(--disp); font-weight:900; font-stretch:150%; text-transform:uppercase; letter-spacing:.08em; font-size:1.15rem;}
+
+/* footer */
+.machine-footer{
+  position:absolute; left:0; right:0; bottom:0; height:2.6rem; z-index:5;
+  display:flex; align-items:center; justify-content:space-between; padding:0 2.2rem;
+  border-top:1px solid var(--line); background:rgba(5,5,5,.85);
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.26em; text-transform:uppercase; color:var(--dim);
+}
+
+/* ---------- ATTRACT ---------- */
+#screen-attract{align-items:center; text-align:center; justify-content:flex-start; cursor:pointer;}
+#screen-attract .corner{position:absolute; font-family:var(--mono); font-size:.72rem; letter-spacing:.26em; color:var(--dim); text-transform:uppercase;}
+#screen-attract .c-tl{top:2rem; left:2.2rem;} #screen-attract .c-tr{top:2rem; right:2.2rem; text-align:right;}
+#screen-attract .c-bl{bottom:1.8rem; left:2.2rem;} #screen-attract .c-br{bottom:1.8rem; right:2.2rem; text-align:right;}
+.attract-mark{margin-top:9vh;}
+.byline{display:flex; align-items:center; justify-content:center; gap:.55rem; color:var(--muted);}
+.byline .mark{color:var(--muted);}
+.attract-clock{font-family:var(--mono); font-size:2.6rem; letter-spacing:.12em; margin-top:4.5vh; font-variant-numeric:tabular-nums;}
+.attract-date{margin-top:.5rem;}
+.attract-head{font-size:4.6rem; margin-top:3.5vh; max-width:12ch;}
+.attract-sub{margin-top:1.4rem; max-width:34ch; line-height:1.55; color:var(--muted); font-size:1.05rem;}
+.start-pill{margin-top:4.5vh; font-size:1.2rem; padding:0 3rem; min-height:4.6rem; animation:pulse 2.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14), 0 0 0 0 rgba(255,255,255,.22);} 50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14), 0 0 0 1.1rem rgba(255,255,255,0);}}
+.browse-panel{
+  margin-top:auto; margin-bottom:1.2rem; display:flex; align-items:center; gap:1.4rem;
+  padding:1.1rem 1.4rem; text-align:left; max-width:30rem;
+}
+.browse-panel img{width:6.2rem; height:6.2rem; border-radius:.4rem; display:block;}
+.qr-card{background:#fff; padding:.55rem; border-radius:.5rem; line-height:0;}
+.qr-card img{display:block;}
+.browse-panel .bp-text .hud{color:var(--ink);}
+.browse-panel .bp-text p{color:var(--muted); font-size:.9rem; line-height:1.5; margin-top:.45rem;}
+
+/* ---------- CATALOG ---------- */
+.catalog-head{display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin:1.2rem 0 1.4rem;}
+.catalog-head .headline{font-size:2.6rem;}
+.browse-chip{display:flex; align-items:center; gap:.9rem; padding:.85rem 1.1rem .85rem .85rem; border-radius:.8rem; text-align:left;}
+.browse-chip img{width:3.8rem; height:3.8rem; border-radius:.3rem;}
+.browse-chip .hud{font-size:.68rem; line-height:1.7;}
+.grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1.3rem; flex:1; min-height:0;}
+.pcard{
+  background:var(--card); border:1px solid var(--line); border-radius:.375rem;
+  display:flex; flex-direction:column; padding:1rem 1rem .9rem; text-align:left;
+  transition:border-color .18s var(--ease), transform .18s var(--ease); position:relative; overflow:hidden;
+}
+.pcard:active{transform:scale(.98);}
+.pcard .slot{position:absolute; top:.8rem; left:.9rem; z-index:2;}
+.pcard .stock{position:absolute; top:.8rem; right:.9rem; z-index:2; font-size:.66rem;}
+.pcard .art{flex:1; display:flex; align-items:center; justify-content:center; min-height:0; padding:.6rem 0 .2rem;}
+.pcard .art svg{height:100%; max-height:11rem; width:auto;}
+.pcard .pname{font-family:var(--disp); font-weight:800; font-stretch:130%; text-transform:uppercase; font-size:1.02rem; line-height:1.12; letter-spacing:.02em;}
+.pcard .prow{display:flex; justify-content:space-between; align-items:baseline; margin-top:.45rem;}
+.pcard .pprice{font-size:1.15rem; color:var(--ink);}
+.pcard .punit{font-size:.72rem; color:var(--dim); letter-spacing:.14em;}
+.pcard.soldout{cursor:not-allowed;}
+.pcard.soldout .art svg{filter:grayscale(1); opacity:.38;}
+.pcard.soldout .pname, .pcard.soldout .pprice{color:var(--dim);}
+.pcard.soldout .stock{color:#fafafa;}
+.pcard.soldout::after{
+  content:""; position:absolute; left:-12%; right:-12%; top:46%; height:1px;
+  background:var(--line-strong); transform:rotate(-7deg);
+}
+.tag{display:inline-block; font-family:var(--mono); font-size:.62rem; letter-spacing:.2em; text-transform:uppercase; color:var(--ink); border:1px solid var(--line-strong); padding:.28rem .5rem; border-radius:.2rem; margin-top:.55rem; align-self:flex-start;}
+
+/* QR overlay (browse, expanded) */
+.overlay{position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:rgba(3,3,4,.72); padding:2rem;}
+.overlay.open{display:flex;}
+.overlay .panel{padding:2.2rem; text-align:center; max-width:26rem; width:100%;}
+.overlay .panel .qr-card{display:inline-block; margin:1.2rem 0;}
+.overlay .panel .qr-card img{width:13rem; height:13rem;}
+.overlay .panel p{color:var(--muted); font-size:.95rem; line-height:1.55;}
+
+/* ---------- DETAIL ---------- */
+.detail-wrap{flex:1; display:flex; flex-direction:column; min-height:0; overflow-y:auto; scrollbar-width:none;}
+.detail-wrap::-webkit-scrollbar{display:none;}
+.detail-hero{display:flex; gap:1.6rem; align-items:stretch; margin-top:1rem;}
+.detail-art{
+  flex:0 0 38%; background:var(--surface2); border:1px solid var(--line); border-radius:.375rem;
+  display:flex; align-items:center; justify-content:center; padding:1.2rem; position:relative; min-height:22rem;
+}
+.detail-art svg{height:16.5rem; width:auto;}
+.detail-art .slot{position:absolute; top:.9rem; left:1rem;}
+.detail-info{flex:1; display:flex; flex-direction:column;}
+.detail-info .headline{font-size:2.5rem; margin:.5rem 0 .8rem;}
+.detail-info .desc{color:var(--muted); line-height:1.55; font-size:1rem;}
+.detail-price-row{display:flex; align-items:baseline; gap:1.1rem; margin-top:auto; padding-top:1rem;}
+.detail-price-row .pprice{font-size:2rem;}
+.spec{margin-top:1.5rem; border:1px solid var(--line); border-radius:.375rem; background:var(--card);}
+.spec-head{display:flex; justify-content:space-between; align-items:center; padding:.85rem 1.1rem; border-bottom:1px solid var(--line);}
+.spec-grid{display:grid; grid-template-columns:repeat(3,1fr);}
+.spec-cell{padding:.95rem 1.1rem; border-right:1px solid var(--line); border-bottom:1px solid var(--line);}
+.spec-cell:nth-child(3n){border-right:none;}
+.spec-cell:nth-last-child(-n+3){border-bottom:none;}
+.spec-cell .v{font-family:var(--mono); font-size:1.5rem; font-variant-numeric:tabular-nums;}
+.spec-cell .v small{font-size:.85rem; color:var(--muted);}
+.spec-cell .k{font-family:var(--mono); font-size:.64rem; letter-spacing:.24em; text-transform:uppercase; color:var(--dim); margin-top:.3rem;}
+.spec-foot{padding:.95rem 1.1rem; border-top:1px solid var(--line);}
+.spec-foot .k{font-family:var(--mono); font-size:.64rem; letter-spacing:.24em; text-transform:uppercase; color:var(--dim);}
+.spec-foot p{color:var(--muted); font-size:.88rem; line-height:1.55; margin-top:.35rem;}
+.detail-actions{display:flex; align-items:center; gap:1rem; padding-top:1.4rem; margin-top:auto;}
+.stepper{display:flex; align-items:center; gap:.2rem; border:1px solid var(--line-strong); border-radius:.25rem;}
+.stepper button{width:4.4rem; height:4.4rem; font-size:1.7rem; font-family:var(--mono); color:var(--ink); display:flex; align-items:center; justify-content:center;}
+.stepper .qv{font-family:var(--mono); font-size:1.6rem; min-width:3.4rem; text-align:center; font-variant-numeric:tabular-nums;}
+.detail-actions{flex-wrap:wrap;}
+.detail-actions .buy-wrap{flex:1 1 100%; margin-top:.3rem;}
+.detail-actions .buy{width:100%; min-height:4.4rem; font-size:1.2rem;}
+.detail-note{display:none; margin-top:1.1rem; border:1px solid var(--line-strong); border-radius:.25rem; padding:.9rem 1.1rem; font-family:var(--mono); font-size:.8rem; letter-spacing:.18em; text-transform:uppercase; color:var(--ink);}
+.detail-note.show{display:block;}
+
+/* ---------- PAY ---------- */
+.pay-wrap{flex:1; display:flex; flex-direction:column; align-items:center; min-height:0;}
+.pay-summary{margin-top:1.4rem; text-align:center;}
+.pay-summary .headline{font-size:2.2rem;}
+.pay-total{font-family:var(--mono); font-size:3rem; margin-top:.6rem; font-variant-numeric:tabular-nums;}
+.pay-card{margin-top:1.8rem; padding:1.8rem 2rem 1.6rem; text-align:center; border-radius:1.2rem;}
+.pay-card .qr-card{display:inline-block;}
+.pay-card .qr-card img{width:15.5rem; height:15.5rem;}
+.pay-card .hud{margin-top:1.1rem; color:var(--ink);}
+.rails{display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; margin-top:1.1rem;}
+.rail-chip{font-family:var(--mono); font-size:.7rem; letter-spacing:.2em; text-transform:uppercase; border:1px solid var(--line-strong); color:var(--ink); padding:.5rem .8rem; border-radius:2rem;}
+.pay-timer{display:flex; align-items:center; gap:1.1rem; margin-top:1.8rem;}
+.ring-wrap{position:relative; width:5.6rem; height:5.6rem;}
+.ring-wrap svg{transform:rotate(-90deg);}
+.ring-bg{stroke:rgba(255,255,255,.14);}
+.ring-fg{stroke:#fff; transition:stroke-dashoffset .2s linear;}
+.ring-num{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:1.35rem; font-variant-numeric:tabular-nums;}
+.pay-actions{display:flex; gap:1rem; margin-top:auto; padding-top:1.6rem; width:100%;}
+.pay-actions .btn{flex:1;}
+.sim-link{margin-top:1.1rem; font-family:var(--mono); font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--dim); text-decoration:underline; text-underline-offset:.3rem; min-height:2.8rem; padding:0 1rem;}
+.sim-link:active{color:var(--ink);}
+
+/* ---------- VEND / THANKS ---------- */
+.center-wrap{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:0;}
+.vend-stage{position:relative; width:20rem; height:22rem; margin-top:2rem;}
+.vend-slot{position:absolute; top:0; left:50%; transform:translateX(-50%); width:15rem; height:3rem; border:1px solid var(--line-strong); border-radius:.3rem; display:flex; align-items:center; justify-content:center; background:var(--surface2);}
+.vend-item{position:absolute; top:3.4rem; left:50%; margin-left:-4.25rem; opacity:0;}
+.vend-item svg{height:11rem; width:auto;}
+.vend-item.drop{animation:drop 1.5s var(--ease) forwards;}
+@keyframes drop{0%{opacity:0; transform:translateY(-1rem);} 12%{opacity:1;} 70%{transform:translateY(8.1rem);} 82%{transform:translateY(7.2rem);} 92%{transform:translateY(7.9rem);} 100%{opacity:1; transform:translateY(7.7rem);}}
+.vend-tray{position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:19rem; height:4.6rem; border:1px solid var(--line-strong); border-radius:.4rem; background:var(--surface2);}
+.vend-dots{display:flex; gap:.5rem; margin-top:1.6rem;}
+.vend-dots span{width:.6rem; height:.6rem; border-radius:50%; background:var(--line-strong); animation:blink 1s infinite;}
+.vend-dots span:nth-child(2){animation-delay:.18s;} .vend-dots span:nth-child(3){animation-delay:.36s;}
+@keyframes blink{0%,100%{background:var(--line-strong);} 50%{background:#fff;}}
+#screen-thanks .headline{font-size:4rem; margin-top:2.2rem;}
+#screen-thanks .thanks-sub{margin-top:1.2rem;}
+
+@media (max-height:760px){ .attract-mark{margin-top:4vh;} .attract-head{font-size:3.6rem;} }
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important; transition:none !important;}
+  .vend-item.drop{opacity:1; transform:translateY(7.7rem);}
+}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- shared mark symbol -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="breakout" viewBox="-5 -5 110 110">
+        <g fill="none" stroke="currentColor" stroke-width="6.5">
+          <path d="M55 20 H20 V84 H84 V43" stroke-linejoin="miter"/>
+          <path d="M80 -1 L84.5 13.5 L99 18 L84.5 22.5 L80 37 L75.5 22.5 L61 18 L75.5 13.5 Z" stroke-linejoin="bevel"/>
+        </g>
+      </symbol>
+      <!-- COIL product mark: squared spiral (the vending coil, end-on).
+           Parent-brand Breakout above is used ONLY in small byline contexts. -->
+      <symbol id="coil" viewBox="-5 -5 110 110">
+        <g fill="none" stroke="currentColor" stroke-width="6.5">
+          <path d="M44 56 H57 V43 H31 V69 H70 V30 H18 V82 H83 V17" stroke-linejoin="miter"/>
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ============ ATTRACT ============ -->
+  <section class="screen active" id="screen-attract" aria-label="Attract screen. Touch anywhere to start.">
+    <div class="corner c-tl">[ A Nivelato Labs Product ]</div>
+    <div class="corner c-tr">[ Coil OS · Rev 01 ]</div>
+    <div class="corner c-bl">[ 09 Products ]</div>
+    <div class="corner c-br">[ Cardless · Phone Pay ]</div>
+
+    <svg class="mark attract-mark" width="150" height="150" viewBox="-5 -5 110 110" aria-hidden="true"><use href="#coil"/></svg>
+    <div class="wordmark" style="font-size:2.3rem; margin-top:1.2rem;">COIL</div>
+    <div class="byline" style="margin-top:1rem;"><svg class="mark" width="21" height="21" viewBox="-5 -5 110 110" aria-hidden="true"><use href="#breakout"/></svg><span class="hud">by Nivelato Labs</span></div>
+    <div class="attract-clock price" id="attract-clock">--:--</div>
+    <div class="hud attract-date" id="attract-date">[ — ]</div>
+    <h1 class="headline attract-head">Snacks,<br>Dispensed.</h1>
+    <p class="attract-sub">Nine slots. Exact change never required. Browse the full catalog here, or on your phone.</p>
+    <button class="btn btn-glass glass start-pill" id="start-btn" type="button">Touch to Start</button>
+
+    <div class="browse-panel glass" id="attract-browse">
+      <div class="qr-card"><img src="assets/qr-browse.png" alt="QR code: browse the catalog on your phone" width="200" height="200"></div>
+      <div class="bp-text">
+        <div class="hud">[ Scan to Browse ]</div>
+        <p>Point your phone camera here to look at the products, nutrition and all, before you commit.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CATALOG ============ -->
+  <section class="screen" id="screen-catalog" aria-label="Product catalog">
+    <div class="topbar">
+      <div class="brand">
+        <svg class="mark" width="44" height="44" viewBox="-5 -5 110 110" aria-hidden="true"><use href="#coil"/></svg>
+        <span class="wordmark">COIL</span>
+      </div>
+      <span class="hud">[ Unit 01 · Aisle A ]</span>
+    </div>
+    <div class="catalog-head">
+      <div>
+        <div class="hud" style="margin-bottom:.5rem;">[ 01 · Select ]</div>
+        <h2 class="headline">Pick your<br>snack</h2>
+      </div>
+      <button class="browse-chip glass" id="catalog-browse-btn" type="button" aria-label="Show QR code to browse on your phone">
+        <img src="assets/qr-browse.png" alt="" width="120" height="120">
+        <span class="hud">Scan to<br><b>Browse on<br>your phone</b></span>
+      </button>
+    </div>
+    <div class="grid" id="catalog-grid"></div>
+  </section>
+
+  <!-- ============ DETAIL ============ -->
+  <section class="screen" id="screen-detail" aria-label="Product detail">
+    <div class="topbar">
+      <button class="btn btn-ghost" id="detail-back" type="button">[ ← Back ]</button>
+      <span class="hud" id="detail-slot">[ Slot — ]</span>
+    </div>
+    <div class="detail-wrap">
+      <div class="detail-note" id="detail-note"></div>
+      <div class="detail-hero">
+        <div class="detail-art">
+          <span class="hud slot" id="detail-slot-tag">[ — ]</span>
+          <div id="detail-art"></div>
+        </div>
+        <div class="detail-info">
+          <div class="hud" id="detail-brand">[ — ]</div>
+          <h2 class="headline" id="detail-name">—</h2>
+          <p class="desc" id="detail-desc"></p>
+          <span class="tag" id="detail-tag" style="display:none"></span>
+          <div class="detail-price-row">
+            <span class="pprice price" id="detail-price">$0.00</span>
+            <span class="hud" id="detail-stock">[ Stock — ]</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-head">
+          <span class="hud"><b>[ Nutrition ]</b></span>
+          <span class="hud" id="detail-serving">Per pack</span>
+        </div>
+        <div class="spec-grid" id="detail-nutrition"></div>
+        <div class="spec-foot">
+          <span class="k">Allergens</span>
+          <p id="detail-allergens"></p>
+          <span class="k" style="display:block; margin-top:.8rem;">Ingredients</span>
+          <p id="detail-ingredients"></p>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <div>
+          <div class="hud" style="margin-bottom:.5rem;">[ Qty ]</div>
+          <div class="stepper">
+            <button id="qty-minus" type="button" aria-label="Decrease quantity">−</button>
+            <span class="qv" id="qty-val">1</span>
+            <button id="qty-plus" type="button" aria-label="Increase quantity">+</button>
+          </div>
+        </div>
+        <div style="flex:1"></div>
+        <div>
+          <div class="hud" style="margin-bottom:.5rem;">[ Total ]</div>
+          <div class="price" id="detail-total" style="font-size:1.7rem;">$0.00</div>
+        </div>
+        <div class="buy-wrap">
+          <button class="btn btn-primary buy" id="detail-buy" type="button">Buy · Scan to Pay</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PAY (QR) ============ -->
+  <section class="screen" id="screen-pay" aria-label="Scan to pay">
+    <div class="topbar">
+      <div class="brand">
+        <svg class="mark" width="44" height="44" viewBox="-5 -5 110 110" aria-hidden="true"><use href="#coil"/></svg>
+        <span class="wordmark">COIL</span>
+      </div>
+      <span class="hud" id="pay-txn">[ Txn — ]</span>
+    </div>
+    <div class="pay-wrap">
+      <div class="pay-summary">
+        <div class="hud">[ 02 · Checkout ]</div>
+        <h2 class="headline" id="pay-item" style="margin-top:.6rem;">—</h2>
+        <div class="pay-total price" id="pay-total">$0.00</div>
+        <div class="hud" id="pay-breakdown" style="margin-top:.4rem;">—</div>
+      </div>
+
+      <div class="pay-card glass">
+        <div class="qr-card"><img src="assets/qr-pay.png" alt="QR code: pay for this purchase with your phone" width="400" height="400"></div>
+        <div class="hud">[ Scan to Pay with Your Phone ]</div>
+        <div class="rails">
+          <span class="rail-chip">WeChat Pay</span>
+          <span class="rail-chip">Alipay</span>
+          <span class="rail-chip">+ Phone Wallets</span>
+        </div>
+      </div>
+
+      <div class="pay-timer">
+        <div class="ring-wrap">
+          <svg width="100%" height="100%" viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="52" fill="none" stroke-width="7"/>
+            <circle class="ring-fg" id="ring-fg" cx="60" cy="60" r="52" fill="none" stroke-width="7" stroke-linecap="butt"/>
+          </svg>
+          <div class="ring-num" id="ring-num">90</div>
+        </div>
+        <div>
+          <div class="hud"><b>[ Payment Window ]</b></div>
+          <div class="hud" style="margin-top:.4rem;">Expires = no charge,<br>back to the product</div>
+        </div>
+      </div>
+
+      <div class="pay-actions">
+        <button class="btn btn-ghost" id="pay-cancel" type="button">[ Cancel · No Charge ]</button>
+      </div>
+      <button class="sim-link" id="pay-sim" type="button">Demo only — simulate paid</button>
+    </div>
+  </section>
+
+  <!-- ============ VEND ============ -->
+  <section class="screen" id="screen-vend" aria-label="Dispensing">
+    <div class="topbar">
+      <div class="brand">
+        <svg class="mark" width="44" height="44" viewBox="-5 -5 110 110" aria-hidden="true"><use href="#coil"/></svg>
+        <span class="wordmark">COIL</span>
+      </div>
+      <span class="hud">[ Paid ✓ ]</span>
+    </div>
+    <div class="center-wrap">
+      <div class="hud">[ 03 · Vend ]</div>
+      <h2 class="headline" style="font-size:3rem; margin-top:.7rem;">Paid —<br>Dispensing</h2>
+      <div class="vend-stage">
+        <div class="vend-slot"><span class="hud" id="vend-slot-label">[ Slot — ]</span></div>
+        <div class="vend-item" id="vend-item"></div>
+        <div class="vend-tray"></div>
+      </div>
+      <div class="vend-dots"><span></span><span></span><span></span></div>
+      <div class="hud" style="margin-top:1.1rem;">[ Collect Below ]</div>
+    </div>
+  </section>
+
+  <!-- ============ THANKS ============ -->
+  <section class="screen" id="screen-thanks" aria-label="Thank you">
+    <div class="center-wrap">
+      <svg class="mark" width="170" height="170" viewBox="-5 -5 110 110" aria-hidden="true"><use href="#coil"/></svg>
+      <h2 class="headline">Thank<br>You.</h2>
+      <div class="hud thanks-sub" id="thanks-sub">[ Txn — · Item Dispensed ]</div>
+      <div class="byline" style="margin-top:1.8rem;"><svg class="mark" width="22" height="22" viewBox="-5 -5 110 110" aria-hidden="true"><use href="#breakout"/></svg><span class="hud">[ A Nivelato Labs Product ]</span></div>
+      <div class="hud" style="margin-top:2.6rem;" id="thanks-count">[ Returning in 6 ]</div>
+    </div>
+  </section>
+
+  <!-- browse QR overlay -->
+  <div class="overlay" id="browse-overlay" role="dialog" aria-label="Browse on your phone">
+    <div class="panel glass">
+      <div class="hud"><b>[ Browse on Your Phone ]</b></div>
+      <div class="qr-card"><img src="assets/qr-browse.png" alt="QR code: browse the catalog on your phone" width="400" height="400"></div>
+      <p>The whole catalog, nutrition panels included, on your phone. This screen will be right here when you get back.</p>
+      <button class="btn btn-ghost btn-glass" id="browse-close" type="button" style="margin-top:1.3rem;">[ Tap to Close ]</button>
+    </div>
+  </div>
+
+  <footer class="machine-footer">
+    <span>[ COIL · Unit 01 · San Juan ]</span>
+    <span>[ Preview Demo · Design Draft ]</span>
+    <span>[ Touch UI · FW 1.0.0 ]</span>
+  </footer>
+</div>
+
+<script>
+/* ================= product data ================= */
+const PRODUCTS = [
+  { id:'chips', slot:'A1', name:'Sea Salt Chips', brand:'Crunch · Potato Co.',
+    desc:'Thick-cut potato chips with sea salt and nothing to hide. The crunch is the spec.',
+    price:1.50, stock:8, art:'bag', accent:'#C9A227', label:'CRUNCH', sub:'SEA SALT',
+    serving:'Per pack · 42 g', cal:160, fat:10, sodium:170, carbs:15, sugar:0, protein:2,
+    allergens:'None of the major allergens. Cooked in sunflower oil.',
+    ingredients:'Potatoes, sunflower oil, sea salt.' },
+  { id:'cookies', slot:'A2', name:'Choco Chip Cookies', brand:'Bakehaus',
+    desc:'Four baked cookies with actual chocolate chips. Soft center, structural integrity questionable.',
+    price:1.75, stock:6, art:'cookies', accent:'#A9713F', label:'BAKEHAUS', sub:'CHOCO CHIP',
+    serving:'Per pack · 58 g', cal:210, fat:9, sodium:150, carbs:31, sugar:17, protein:2,
+    allergens:'Contains wheat, milk, egg, soy.',
+    ingredients:'Wheat flour, chocolate chips (sugar, cocoa butter, cocoa mass), butter, brown sugar, egg, baking soda, salt.' },
+  { id:'noir', slot:'A3', name:'Noir 70% Chocolate', brand:'Noir',
+    desc:'A serious dark chocolate bar. Seventy percent cacao, zero small talk.',
+    price:2.00, stock:5, art:'bar', accent:'#7C4A3C', label:'NOIR', sub:'70% CACAO',
+    serving:'Per bar · 40 g', cal:170, fat:12, sodium:15, carbs:13, sugar:8, protein:2,
+    allergens:'May contain milk and tree nuts.',
+    ingredients:'Cacao mass, sugar, cacao butter, vanilla.' },
+  { id:'cola', slot:'A4', name:'Volt Cola', brand:'Volt',
+    desc:'Cold cola, full sugar, full voltage. Served at exactly the temperature the machine prefers: cold.',
+    price:1.25, stock:10, art:'can', accent:'#5E6E7E', label:'VOLT', sub:'COLA',
+    serving:'Per can · 330 ml', cal:140, fat:0, sodium:45, carbs:39, sugar:39, protein:0,
+    allergens:'None.',
+    ingredients:'Carbonated water, sugar, caramel color, phosphoric acid, natural flavors, caffeine.' },
+  { id:'water', slot:'A5', name:'Clara Spring Water', brand:'Clara',
+    desc:'Spring water. For the ones whose hydration game is as serious as their snack game.',
+    price:1.00, stock:12, art:'bottle', accent:'#8FA6AD', label:'CLARA', sub:'SPRING WATER',
+    serving:'Per bottle · 500 ml', cal:0, fat:0, sodium:10, carbs:0, sugar:0, protein:0,
+    allergens:'None.',
+    ingredients:'Spring water. That is the whole list.' },
+  { id:'trailmix', slot:'B1', name:'Sierra Trail Mix', brand:'Sierra',
+    desc:'Peanuts, almonds, raisins and chocolate pieces. The expedition ration of the catalog.',
+    price:2.25, stock:0, art:'bagwin', accent:'#8C6D4F', label:'SIERRA', sub:'TRAIL MIX',
+    serving:'Per pack · 50 g', cal:180, fat:11, sodium:60, carbs:16, sugar:9, protein:5,
+    allergens:'Contains peanuts and tree nuts (almond, cashew).',
+    ingredients:'Peanuts, almonds, raisins, cashews, chocolate pieces (sugar, cocoa), sunflower oil, salt.' },
+  { id:'granola', slot:'B2', name:'Oat + Honey Granola Bar', brand:'Field',
+    desc:'Rolled oats and honey in bar form. Breakfast, portioned to the gram.',
+    price:1.50, stock:7, art:'bar', slim:true, accent:'#B08D2E', label:'FIELD', sub:'OAT + HONEY',
+    serving:'Per bar · 45 g', cal:190, fat:6, sodium:95, carbs:29, sugar:11, protein:3,
+    allergens:'Contains oats. May contain peanuts and tree nuts.',
+    ingredients:'Rolled oats, honey, brown rice syrup, almonds, sunflower seeds, sea salt.' },
+  { id:'meatsticks', slot:'B3', name:'Rancho Meat Sticks', brand:'Rancho',
+    desc:'Three smoked beef-and-pork sticks. Yes, this machine stocks meat sticks. No, we will not be taking questions.',
+    price:2.50, stock:4, art:'sticks', accent:'#96503F', label:'MEAT STICKS', sub:'SMOKED · 3 PACK', tag:'[ Staff Pick ]',
+    serving:'Per pack · 3 sticks · 42 g', cal:140, fat:11, sodium:530, carbs:2, sugar:1, protein:9,
+    allergens:'None of the major allergens. Made in a facility that also handles milk.',
+    ingredients:'Beef, pork, sea salt, spices, cultured celery powder, garlic, smoke.' },
+  { id:'crackers', slot:'B4', name:'Salt Crackers', brand:'Crumb',
+    desc:'Six saltine-style crackers. The control group of snacks: plain, salty, dependable.',
+    price:1.25, stock:9, art:'bag', accent:'#B4A078', label:'CRUMB', sub:'SALT CRACKERS',
+    serving:'Per pack · 36 g', cal:130, fat:4, sodium:230, carbs:22, sugar:1, protein:2,
+    allergens:'Contains wheat.',
+    ingredients:'Enriched wheat flour, soybean oil, sea salt, yeast, baking soda.' },
+];
+
+/* ================= code-drawn pack art ================= */
+const LINE = 'rgba(255,255,255,.38)';
+function txt(x, y, s, size, fill, weight, spacing, family){
+  return `<text x="${x}" y="${y}" text-anchor="middle" font-family="${family||"'Anybody',Arial,sans-serif"}" font-size="${size}" font-weight="${weight||800}" fill="${fill}" ${spacing?`letter-spacing="${spacing}"`:''}>${s}</text>`;
+}
+function artSVG(p){
+  const a = p.accent, L = LINE;
+  let inner = '';
+  if (p.art === 'bag' || p.art === 'bagwin'){
+    let win = '';
+    if (p.art === 'bagwin'){
+      const dots = [[84,102,'#8C6D4F'],[102,96,'#5E4630'],[118,104,'#C9A227'],[92,120,'#3E2E20'],[112,124,'#8C6D4F'],[126,118,'#5E4630'],[82,132,'#C9A227'],[104,140,'#3E2E20'],[124,140,'#8C6D4F'],[94,150,'#5E4630'],[116,152,'#3E2E20']]
+        .map(d=>`<circle cx="${d[0]}" cy="${d[1]}" r="6" fill="${d[2]}"/>`).join('');
+      win = `<rect x="66" y="84" width="68" height="80" rx="6" fill="#0a0a0b" stroke="${L}" stroke-width="1.5"/>${dots}`;
+    }
+    inner = `
+      <rect x="48" y="26" width="104" height="208" rx="10" fill="#16161a" stroke="${L}" stroke-width="2"/>
+      <path d="M48 48 H152 M48 212 H152" stroke="${L}" stroke-width="1.5"/>
+      <path d="M56 37 h88 M56 223 h88" stroke="${L}" stroke-width="1" stroke-dasharray="4 5"/>
+      ${win}
+      ${txt(100, p.art==='bagwin'?196:118, p.label, 17, '#fafafa', 850, 1)}
+      <rect x="48" y="${p.art==='bagwin'?204:128}" width="104" height="30" fill="${a}"/>
+      ${txt(100, (p.art==='bagwin'?204:128)+20, p.sub, 9.5, '#050505', 700, 2, "ui-monospace,Menlo,monospace")}`;
+  } else if (p.art === 'can'){
+    inner = `
+      <rect x="62" y="30" width="76" height="200" rx="10" fill="#16161a" stroke="${L}" stroke-width="2"/>
+      <ellipse cx="100" cy="36" rx="32" ry="6" fill="#26262b" stroke="${L}" stroke-width="1.5"/>
+      <circle cx="84" cy="66" r="2.4" fill="none" stroke="${L}"/><circle cx="112" cy="58" r="1.8" fill="none" stroke="${L}"/><circle cx="100" cy="76" r="1.5" fill="none" stroke="${L}"/>
+      ${txt(100, 108, p.label, 19, '#fafafa', 850, 2)}
+      <rect x="62" y="120" width="76" height="30" fill="${a}"/>
+      ${txt(100, 140, p.sub, 9.5, '#050505', 700, 2, "ui-monospace,Menlo,monospace")}
+      ${txt(100, 196, '330 ML', 9, '#6f6f77', 600, 2, "ui-monospace,Menlo,monospace")}`;
+  } else if (p.art === 'bottle'){
+    inner = `
+      <rect x="85" y="24" width="30" height="17" rx="3" fill="${a}"/>
+      <path d="M88 41 h24 v20 c0 11 16 15 16 31 v128 a10 10 0 0 1 -10 10 h-36 a10 10 0 0 1 -10 -10 v-128 c0 -16 16 -20 16 -31 z" fill="#12161a" stroke="${L}" stroke-width="2"/>
+      <path d="M80 108 q10 -6 20 0 t20 0 M80 200 q10 -6 20 0 t20 0" stroke="rgba(255,255,255,.18)" stroke-width="1.5" fill="none"/>
+      <rect x="72" y="136" width="56" height="46" fill="${a}"/>
+      ${txt(100, 164, p.label, 12.5, '#050505', 850, 1)}
+      ${txt(100, 214, p.sub, 8, '#6f6f77', 600, 1.5, "ui-monospace,Menlo,monospace")}`;
+  } else if (p.art === 'bar'){
+    const h = p.slim ? 46 : 60, y0 = 130 - h/2;
+    inner = `
+      <g transform="rotate(-4 100 130)">
+        <polygon points="24,${y0} 8,${y0+10} 8,${y0+h-10} 24,${y0+h}" fill="#101013" stroke="${L}" stroke-width="1.5"/>
+        <polygon points="176,${y0} 192,${y0+10} 192,${y0+h-10} 176,${y0+h}" fill="#101013" stroke="${L}" stroke-width="1.5"/>
+        <rect x="24" y="${y0}" width="152" height="${h}" rx="7" fill="#16161a" stroke="${L}" stroke-width="2"/>
+        <rect x="24" y="${y0 + h/2 - 10}" width="152" height="20" fill="${a}"/>
+        ${txt(100, y0 + h/2 + 4.5, p.label, 13, '#050505', 850, 2)}
+        ${txt(100, y0 - 14, p.sub, 9.5, '#a8a8b0', 600, 2, "ui-monospace,Menlo,monospace")}
+      </g>`;
+  } else if (p.art === 'cookies'){
+    const cookie = (cx, cy) => `<circle cx="${cx}" cy="${cy}" r="17" fill="#241a12" stroke="${L}" stroke-width="1.5"/>
+      <circle cx="${cx-6}" cy="${cy-4}" r="2.2" fill="#0a0a0b"/><circle cx="${cx+5}" cy="${cy+3}" r="2.2" fill="#0a0a0b"/><circle cx="${cx+1}" cy="${cy-8}" r="1.8" fill="#0a0a0b"/><circle cx="${cx-3}" cy="${cy+8}" r="1.8" fill="#0a0a0b"/>`;
+    inner = `
+      <rect x="42" y="32" width="116" height="196" rx="9" fill="#16161a" stroke="${L}" stroke-width="2"/>
+      <path d="M42 56 H158" stroke="${L}" stroke-width="1.5"/>
+      ${cookie(76, 94)}${cookie(122, 94)}${cookie(99, 134)}
+      <rect x="42" y="172" width="116" height="56" fill="${a}"/>
+      ${txt(100, 198, p.label, 14.5, '#050505', 850, 1.5)}
+      ${txt(100, 216, p.sub, 8.5, '#050505', 700, 2, "ui-monospace,Menlo,monospace")}`;
+  } else if (p.art === 'sticks'){
+    const stick = x => `<rect x="${x}" y="12" width="11" height="88" rx="5.5" fill="#7A4A38" stroke="rgba(255,255,255,.25)" stroke-width="1"/>`;
+    const words = p.label.split(' ');
+    inner = `
+      ${stick(73)}${stick(94)}${stick(115)}
+      <rect x="52" y="74" width="96" height="164" rx="9" fill="#16161a" stroke="${L}" stroke-width="2"/>
+      <path d="M52 96 H148" stroke="${L}" stroke-width="1.5"/>
+      <rect x="52" y="118" width="96" height="62" fill="${a}"/>
+      ${txt(100, 143, words[0], 16.5, '#050505', 850, 1)}
+      ${txt(100, 166, words.slice(1).join(' '), 16.5, '#050505', 850, 1)}
+      ${txt(100, 208, p.sub, 8.5, '#a8a8b0', 600, 1.8, "ui-monospace,Menlo,monospace")}`;
+  }
+  return `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${p.name} pack illustration">${inner}</svg>`;
+}
+
+/* ================= state machine ================= */
+const $ = s => document.querySelector(s);
+const money = n => '$' + n.toFixed(2);
+const state = { screen:'attract', product:null, qty:1, txn:null };
+let payInt = null, vendTO = null, thanksInt = null;
+
+function clearTimers(){
+  if (payInt){ clearInterval(payInt); payInt = null; }
+  if (vendTO){ clearTimeout(vendTO); vendTO = null; }
+  if (thanksInt){ clearInterval(thanksInt); thanksInt = null; }
+}
+function show(name){
+  clearTimers();
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  $('#screen-' + name).classList.add('active');
+  state.screen = name;
+  window.scrollTo(0, 0);
+}
+
+/* ---------- attract clock ---------- */
+function tickClock(){
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
+  $('#attract-clock').textContent = hh + ':' + mm;
+  const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  $('#attract-date').textContent = `[ ${days[now.getDay()]} · ${months[now.getMonth()]} ${String(now.getDate()).padStart(2,'0')} ]`;
+}
+tickClock(); setInterval(tickClock, 1000);
+
+$('#screen-attract').addEventListener('click', () => { renderCatalog(); show('catalog'); });
+
+/* ---------- catalog ---------- */
+function renderCatalog(){
+  const grid = $('#catalog-grid');
+  grid.innerHTML = '';
+  PRODUCTS.forEach(p => {
+    const out = p.stock <= 0;
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'pcard' + (out ? ' soldout' : '');
+    card.disabled = out;
+    card.setAttribute('aria-label', p.name + ', ' + money(p.price) + (out ? ', sold out' : ', ' + p.stock + ' in stock'));
+    card.innerHTML = `
+      <span class="hud slot">[ ${p.slot} ]</span>
+      <span class="hud stock">${out ? '[ Sold Out ]' : '[ Stock ' + String(p.stock).padStart(2,'0') + ' ]'}</span>
+      <span class="art">${artSVG(p)}</span>
+      <span class="pname">${p.name}</span>
+      ${p.tag ? `<span class="tag">${p.tag}</span>` : ''}
+      <span class="prow"><span class="pprice price">${money(p.price)}</span><span class="punit">/ PACK</span></span>`;
+    if (!out) card.addEventListener('click', () => openDetail(p, false));
+    grid.appendChild(card);
+  });
+}
+renderCatalog();
+
+/* browse overlay */
+$('#catalog-browse-btn').addEventListener('click', () => $('#browse-overlay').classList.add('open'));
+$('#browse-close').addEventListener('click', () => $('#browse-overlay').classList.remove('open'));
+$('#browse-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
+
+/* ---------- detail ---------- */
+function openDetail(p, expired){
+  state.product = p; state.qty = 1;
+  $('#detail-slot').textContent = `[ Slot ${p.slot} · ${p.brand} ]`;
+  $('#detail-slot-tag').textContent = `[ ${p.slot} ]`;
+  $('#detail-art').innerHTML = artSVG(p);
+  $('#detail-brand').textContent = `[ ${p.brand} ]`;
+  $('#detail-name').textContent = p.name;
+  $('#detail-desc').textContent = p.desc;
+  const tag = $('#detail-tag');
+  if (p.tag){ tag.textContent = p.tag; tag.style.display = ''; } else { tag.style.display = 'none'; }
+  $('#detail-price').textContent = money(p.price);
+  $('#detail-stock').textContent = `[ Stock ${String(p.stock).padStart(2,'0')} ]`;
+  $('#detail-serving').textContent = p.serving;
+  const rows = [['Calories', p.cal, ''], ['Total Fat', p.fat, 'g'], ['Sodium', p.sodium, 'mg'],
+                ['Carbs', p.carbs, 'g'], ['Sugar', p.sugar, 'g'], ['Protein', p.protein, 'g']];
+  $('#detail-nutrition').innerHTML = rows.map(r =>
+    `<div class="spec-cell"><div class="v">${r[1]}<small>${r[2]}</small></div><div class="k">${r[0]}</div></div>`).join('');
+  $('#detail-allergens').textContent = p.allergens;
+  $('#detail-ingredients').textContent = p.ingredients;
+  const note = $('#detail-note');
+  if (expired){
+    note.textContent = 'Payment window expired — no charge. Take your time, it is still here.';
+    note.classList.add('show');
+  } else { note.classList.remove('show'); }
+  syncQty();
+  show('detail');
+}
+function maxQty(){ return Math.min(state.product.stock, 10); }
+function syncQty(){
+  $('#qty-val').textContent = state.qty;
+  $('#detail-total').textContent = money(state.product.price * state.qty);
+  $('#qty-minus').disabled = state.qty <= 1;
+  $('#qty-plus').disabled = state.qty >= maxQty();
+  const buy = $('#detail-buy');
+  buy.textContent = `Buy · ${money(state.product.price * state.qty)}`;
+}
+$('#qty-minus').addEventListener('click', () => { if (state.qty > 1){ state.qty--; syncQty(); } });
+$('#qty-plus').addEventListener('click', () => { if (state.qty < maxQty()){ state.qty++; syncQty(); } });
+$('#detail-back').addEventListener('click', () => { renderCatalog(); show('catalog'); });
+$('#detail-buy').addEventListener('click', openPay);
+
+/* ---------- pay ---------- */
+const PAY_SECONDS = 90, RING_C = 2 * Math.PI * 52;
+function openPay(){
+  const p = state.product;
+  state.txn = 'TXN ' + Math.floor(1000 + Math.random() * 9000);
+  $('#pay-txn').textContent = `[ ${state.txn} ]`;
+  $('#pay-item').textContent = p.name;
+  $('#pay-total').textContent = money(p.price * state.qty);
+  $('#pay-breakdown').textContent = `[ ${state.qty} × ${money(p.price)} · Slot ${p.slot} ]`;
+  show('pay');
+  const ring = $('#ring-fg'), num = $('#ring-num');
+  ring.style.strokeDasharray = RING_C;
+  let remain = PAY_SECONDS;
+  const render = () => {
+    ring.style.strokeDashoffset = RING_C * (1 - remain / PAY_SECONDS);
+    num.textContent = Math.ceil(remain);
+  };
+  render();
+  const t0 = Date.now();
+  payInt = setInterval(() => {
+    remain = PAY_SECONDS - (Date.now() - t0) / 1000;
+    if (remain <= 0){ openDetail(p, true); return; }
+    render();
+  }, 100);
+}
+$('#pay-cancel').addEventListener('click', () => openDetail(state.product, false));
+$('#pay-sim').addEventListener('click', openVend);
+
+/* ---------- vend + thanks ---------- */
+function openVend(){
+  const p = state.product;
+  p.stock = Math.max(0, p.stock - state.qty);
+  $('#vend-slot-label').textContent = `[ Slot ${p.slot} · ×${state.qty} ]`;
+  const item = $('#vend-item');
+  item.innerHTML = artSVG(p);
+  show('vend');
+  item.classList.remove('drop');
+  void item.offsetWidth;
+  item.classList.add('drop');
+  vendTO = setTimeout(openThanks, 2400);
+}
+function openThanks(){
+  $('#thanks-sub').textContent = `[ ${state.txn} · ${state.product.name} ×${state.qty} · Dispensed ]`;
+  show('thanks');
+  let left = 6;
+  const el = $('#thanks-count');
+  el.textContent = `[ Returning in ${left} ]`;
+  thanksInt = setInterval(() => {
+    left--;
+    if (left <= 0){ renderCatalog(); show('attract'); return; }
+    el.textContent = `[ Returning in ${left} ]`;
+  }, 1000);
+}
+$('#screen-thanks').addEventListener('click', () => { renderCatalog(); show('attract'); });
+</script>
+</body>
+</html>
